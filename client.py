@@ -25,16 +25,26 @@ class Client(object):
         u = string.join(random.sample({'0', '1', '2', '3', '4', '5', \
                                        '6', '7', '8', '9', '0', '1', \
                                        '2', '3', '5', '4', '6', '7', \
-                                       '8', '9'}, 15)).replace(" ", "")
+                                       '8', '9'}, 10)).replace(" ", "")
+
+
+        ut = string.join(random.sample({'0', '1', '2', '3', '4', '5', \
+                                       '6', '7', '8', '9', '0', '1', \
+                                       '2', '3', '5', '4', '6', '7', \
+                                       '8', '9'}, 5)).replace(" ", "")
+        
+        u = u + ut
 
         s = string.join(random.sample(['a', 'b', 'c', 'd', 'e', 'f',\
                                        'g', 'h', 'i', 'j', 'k', 'l',\
                                        'm', 'n', 'o', 'p', 'q', 'r',\
                                        's', 't', 'u', 'v', 'w', 'x',\
                                        'y', 'z', '0', '1', '2', '3',\
-                                       '4', '5', '6', '7', '8', '9'], 15)).replace(" ", "")
+                                       '4', '5', '6', '7', '8', '9'], 10)).replace(" ", "")
 
         return cookie + 's=' + s + ";u=" + u + ";"
+
+        # return cookie
 
     def request(self, url):
         header = {
@@ -42,7 +52,7 @@ class Client(object):
             'User-Agent':self.__agent_list[0],
             'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Connection':'keep-alive',
-            'Cookie':self.creat_cookie
+            'Cookie':self.creat_cookie()
         }
 
         request = urllib2.Request(url, headers=header)
@@ -52,4 +62,5 @@ class Client(object):
 
 if __name__ == "__main__":
     client = Client()
-    print client.request('https://xueqiu.com/stock/f10/bizunittrdinfo.json?date=20170105')
+    # print client.creat_cookie()
+    print client.request('https://xueqiu.com/stock/f10/bizunittrdinfo.json?date=20170927')
