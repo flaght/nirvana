@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import pandas as pd
+
 URL = 'URL'
 DTYPE = 'DTYPE'
 OBJ = 'OBJ'
@@ -70,3 +72,8 @@ def GetDataEngine( source ):
         raise Exception("未知的数据源 -- '{0}'")
 
     return engine
+
+if __name__ == "__main__":
+    db_engine = GetDataEngine('DNDS')
+    df = pd.read_sql('SELECT * from dnds.dbo.TQ_QT_SKDAILYPRICE where SECODE = 2010000565 and TRADEDATE = 19901220', db_engine)
+    print (df)
