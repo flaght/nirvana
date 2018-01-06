@@ -25,6 +25,7 @@ class OrderPrice(Enum):
     limit_price = 2 # 限价
     best_price = 3 # 最优价
     last_price = 4 # 最新价
+    avg_price = 5 # 均价单
 
 @unique
 class Direction(Enum):
