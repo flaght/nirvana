@@ -3,6 +3,7 @@
 
 from collections import OrderedDict
 import os
+import sys
 import pandas as pd
 import tushare as ts
 import json
@@ -47,7 +48,7 @@ class LookBack(object):
         for lhb in lhb_set:
             file_object = open(lhb)
             json_ob = json.loads(file_object.read())
-            self.__strategy.on_lhb_event(json_ob)
+            self.__strategy.on_lhb_event(json_ob, date)
             file_object.close()
 
 
@@ -59,6 +60,8 @@ class LookBack(object):
                 self.__loop_back(date, lhb_set)
 
 if __name__ == '__main__':
+    reload(sys)
+    sys.setdefaultencoding('utf8')
     lb = LookBack(20160102,20180102)
-    lb.init_read_lhb('./outputbak/temp/')
+    lb.init_read_lhb('./output/')
     lb.start()

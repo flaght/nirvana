@@ -15,13 +15,28 @@ class LHBPair(object):
         self.seq_bize_buy = OrderedDict() # key 为顺序
         self.code_bize_sale = OrderedDict()
         self.seq_bize_sale = OrderedDict()
-        self.buy_amount = 0
-        self.sale_amount = 0
+        self.__buy_amount = 0
+        self.__sale_amount = 0
         self.__chg_type = ''
 
+        self.__date = 0 # 交易日
+        self.__symbol = ''# 交易标的
+
+
+    def date(self):
+        return self.__date
+
+    def symbol(self):
+        return self.__symbol
 
     def chg_type(self):
         return self.__chg_type
+
+    def set_date(self, date):
+        self.__date = date
+
+    def set_symbol(self, symbol):
+        self.__symbol = symbol
 
     def set_chg_type(self, chg_type):
         self.__chg_type = chg_type
@@ -34,10 +49,10 @@ class LHBPair(object):
         return self.__daily_price
 
     def buy_amount(self):
-        return self.buy_amount
+        return self.__buy_amount
 
     def sale_amount(self):
-        return self.sale_amount
+        return self.__sale_amount
 
     def bize_sale_from_pos(self, index):
         if self.seq_bize_sale.has_key(index):
@@ -66,12 +81,12 @@ class LHBPair(object):
     def set_bize_buy(self, bize_buy):
         self.code_bize_buy[bize_buy.bize_code()] = bize_buy
         self.seq_bize_buy[len(self.seq_bize_buy)] = bize_buy
-        self.buy_amount += bize_buy.amount()
+        self.__buy_amount += bize_buy.amount()
 
     def set_bize_sale(self, bize_sale):
         self.code_bize_sale[bize_sale.bize_code()] = bize_sale
         self.seq_bize_sale[len(self.seq_bize_sale)] = bize_sale
-        self.sale_amount += bize_sale.amount()
+        self.__sale_amount += bize_sale.amount()
 
 class BizeLHB(object):
 
