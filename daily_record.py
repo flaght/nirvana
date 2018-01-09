@@ -71,7 +71,7 @@ class DailyRecord(object):
         self.__base_value = 0.0 # 当日初始可用资金
         self.__close_profit = 0.0  # 平仓收益
         self.__position_profit = 0.0 # 持仓收益
-        self.__commission = 0.0 # 手续费
+        self.__fee = 0.0 # 手续费
         self.__max_profit = 0.0 # 历史中最大收益
         self.__last_value = 0.0 # 上一个交易日的净值
         self.__last_profit = 0.0 # 上一个交易日的累计盈亏
@@ -95,8 +95,8 @@ class DailyRecord(object):
     def set_position_profit(self, position_profit):
         self.__position_profit = position_profit
 
-    def set_commssion(self, commssion):
-        self.__commission = commssion
+    def set_fee(self, fee):
+        self.__fee = fee
 
     def set_limit_volume(self, limit_volume):
         self.__history_limit_volume = copy.deepcopy(limit_volume)
@@ -133,7 +133,7 @@ class DailyRecord(object):
         return self.__value_chg
 
     def all_profit(self):
-        self.__profit = self.__close_profit + self.__position_profit  - self.__commission # 当日盈亏
+        self.__profit = self.__close_profit + self.__position_profit  - self.__fee # 当日盈亏
         return self.__profit
 
     def calc_result(self):
@@ -150,4 +150,4 @@ class DailyRecord(object):
             self.__base_value,self.__value_chg,self.__log_chg))
     
     def dump(self):
-        MLog.write().info(self.log())
+        print(self.log())

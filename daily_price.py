@@ -28,6 +28,18 @@ class DailyPrice(object):
         self.__totmktcap = 0.0 # 总市值
         self.__negotiablemv = 0.0 # 流通市值
 
+    
+    def df_parser(self, df):
+        self.__symbol = df[1]
+        self.__trade_date = int(df[2])
+        self.__latest_price = df[3]
+        self.__today_open = df[4]
+        self.__today_close = df[5]
+        self.__today_high = df[6]
+        self.__today_low = df[7]
+        self.__avg_price = df[8]
+        self.__vol = df[9]
+        self.__amount = df[10]
 
     def xq_parser(self, ob):
         self.__trade_date = int(ob.get('tradedate'))
@@ -51,12 +63,12 @@ class DailyPrice(object):
 
 
     def dump(self):
-        MLog.write().debug('trade_date:%d,symbol:%s,latest_price:%f,today_open:%f,today_close:%f,today_high:%f,today_low:%f,vol:%f,amount:%f,change:%f,pchg:%f,amplitude:%f,deals:%f,avg_price:%f,avg_vol:%f,avgtramt:%f,turnrate:%f,totmktcap:%f,negotiablemv:%f',
+        print('trade_date:%d,symbol:%s,latest_price:%f,today_open:%f,today_close:%f,today_high:%f,today_low:%f,vol:%f,amount:%f,change:%f,pchg:%f,amplitude:%f,deals:%f,avg_price:%f,avg_vol:%f,avgtramt:%f,turnrate:%f,totmktcap:%f,negotiablemv:%f' %(
                            self.__trade_date,self.__symbol,self.__latest_price,
                           self.__today_open,self.__today_close,self.__today_high,self.__today_low,
                           self.__vol,self.__amount,self.__change,self.__pchg,self.__amplitude,
                           self.__deals,self.__avg_price,self.__avg_vol,self.__avgtramt,
-                          self.__turnrate,self.__totmktcap,self.__negotiablemv)
+                          self.__turnrate,self.__totmktcap,self.__negotiablemv))
 
     def set_symbol(self, symbol):
         self.__symbol = symbol

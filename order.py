@@ -56,9 +56,15 @@ class Order(object):
         self.__create_time = 0  # 报单时间
         self.__min_volume = 0 # 最小成交量
         self.__fee = 0.0 # 手续费
-        self.__fee_ratio = 0.0 # 手续费率
+        self.__commission = 0.0 # 佣金
+        self.__commission_ratio = 0.0 # 佣金率
+        self.__stamp = 0.0 # 印花税
+        self.__stamp_ratio = 0.0 # 印花税率
+        self.__transfer = 0.0 # 过户费
+        self.__transfer_ratio = 0.0 # 过户费率
         self.__margin = 0.0 # 保证金
         self.__margin_ratio = 0.0 # 保证金率
+        self.__cost = 0.0 # 持仓费用(不包含手续费)
         self.__status = OrderStatus.not_traded #初始化为未知
         self.__hold_volume_id = 0 # 下平仓单时候记录持仓的ID，用于平仓盈亏计算
 
@@ -73,10 +79,11 @@ class Order(object):
         elif self.__comb_offset_flag == CombOffset.close and self.__direction == Direction.sell_direction:
             str = '多头平仓'
 
-        MLog.write().debug('[%s]--->Order:order_id:%d,hold_vol_id:%d,amount:%d,status:%d,comb_offset_flag:%d, direction:%d, limit_price:%f,amount:%d,strategy_id:%d,create_time:%d,min_volume:%d,fee:%f,margin:%f'%(str,self.__order_id,
-                            self.__hold_volume_id,self.__amount,self.__status.value, self.__comb_offset_flag.value, self.__direction.value,
-                            self.__limit_price, self.__amount, self.__strategy_id,self.__create_time,
-                            self.__min_volume, self.__fee, self.__margin))
+        print('[%s]--->Order:symbol:%s,order_id:%d,hold_vol_id:%d,amount:%d,status:%d,comb_offset_flag:%d,direction:%d,limit_price:%f,amount:%d,cost:%f,fee:%f,commission:%f,stamp:%f,transfer:%f,strategy_id:%d,create_time:%d,min_volume:%d,margin:%f'%(
+                        str, self.__symbol, self.__order_id, self.__hold_volume_id, self.__amount, self.__status.value, self.__comb_offset_flag.value, 
+                        self.__direction.value, self.__limit_price, self.__amount, self.cost(), self.fee(), self.__commission, self.__stamp, self.__transfer,
+                        self.__strategy_id,self.__create_time,self.__min_volume, self.__margin))
+
     def order_id(self):
         return self.__order_id
 
@@ -85,6 +92,12 @@ class Order(object):
 
     def symbol(self):
         return self.__symbol
+
+    def vol(self):
+        return self.__amount * self.__min_volume
+
+    def cost(self):
+        return self.__limit_price * self.__amount * self.__min_volume
 
     def margin(self):
         if self.__comb_offset_flag == CombOffset.open:
@@ -95,11 +108,31 @@ class Order(object):
     def margin_ratio(self):
         return self.__margin_ratio
 
-    def fee(self):
-        return self.__fee
+    def stamp(self):
+        return self.__stamp
 
-    def fee_ratio(self):
-        return self.__fee_ratio
+    def stamp_ratio(self):
+        return self.__stamp_ratio
+
+    def transfer(self):
+        return self.__transfer
+
+    def transfer_ratio(self):
+        return self.__transfer_ratio
+
+    def commission(self):
+        return self.__commission
+
+    def commission_ratio(self):
+        return self.__commission_ratio
+
+    def fee(self):
+        # 开仓 佣金 + 过户费(上证)
+        # 平仓 佣金 + 印花税 + 过户费(上证)
+        if self.__comb_offset_flag == CombOffset.open:
+            return self.__commission + self.__transfer
+        elif self.__comb_offset_flag == CombOffset.close:
+            return self.__commission + self.__stamp + self.__transfer
 
     def hold_volume_id(self):
         return self.__hold_volume_id
@@ -164,13 +197,26 @@ class Order(object):
     def set_min_volume(self, min_volume):
         self.__min_volume = min_volume
 
+    def set_status(self, status):
+        self.__status = status
+
+    # 印花税
+    def set_stamp(self, stamp_ratio):
+        self.__stamp_ratio = stamp_ratio
+        self.__stamp = self.__limit_price * self.__min_volume * self.__amount  * stamp_ratio
+
+    # 佣金
+    def set_commission(self, commission_ratio):
+        self.__commission_ratio = commission_ratio
+        commission = self.__limit_price * self.__amount * self.__min_volume * commission_ratio
+        self.__commission = commission if commission > 5 else 5
+    
+    # 过户费
+    def set_transfer(self, transfer_ratio):
+        self.__transfer_ratio = transfer_ratio
+        # self.__transfer = int((self.__amount * self.__min_volume) / 1000 + 1) * transfer_ratio
+        self.__transfer = int((self.__amount * self.__min_volume) * transfer_ratio) + 1
+
     def set_margin(self, margin_ratio):
         self.__margin = self.__limit_price * self.__min_volume * margin_ratio
         self.__margin_ratio = margin_ratio
-
-    def set_fee(self, fee_ratio):
-        self.__fee = self.__limit_price * self.__min_volume * fee_ratio
-        self.__fee_ratio = fee_ratio
-
-    def set_status(self, status):
-        self.__status = status
