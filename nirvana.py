@@ -10,7 +10,7 @@ from bize_lhb import BizeLHB, LHBPair
 import pandas as pd
 import numpy as np
 import time
-DEFAULT_CASH = 10000000
+DEFAULT_CASH = 2000000
 
 class Nirvana(object):
     
@@ -115,16 +115,16 @@ class Nirvana(object):
 
     def __lhb_buy_price(self, bize_buy_one, bize_buy_two,lhb_pair,  date, symbol):
         if bize_buy_two is None and bize_buy_one is not None: # 只有买一方， 防止一家独大
-            print('%d: %s 只有买一方，存在一家独大危险'%(date, symbol))
+            # print('%d: %s 只有买一方，存在一家独大危险'%(date, symbol))
             return False
         if bize_buy_one.amount() / bize_buy_two.amount() > 1.5: # 买一方和买二方相差太大
-            print('%d: %s 买一方和买二方相差太大'%(date, symbol))
+            # print('%d: %s 买一方和买二方相差太大'%(date, symbol))
             return False
 
 
         bize_sale_opp = lhb_pair.bize_sale_from_code(bize_buy_one.bize_code())
         if bize_sale_opp is not None:
-            print('%d: %s 买一方非单纯买方'%(date, symbol))
+            # print('%d: %s 买一方非单纯买方'%(date, symbol))
             return False
         return True
 
@@ -133,7 +133,7 @@ class Nirvana(object):
         symbol = lhb_pair.symbol()
         date = lhb_pair.date()
         if self.lhb[lhb_pair.chg_type()] == -1: # 负面上榜不下单
-            print('%d: %s 负面上榜不下单'%(date, symbol))
+            # print('%d: %s 负面上榜不下单'%(date, symbol))
             return False
         
         bize_buy_one = lhb_pair.bize_buy_from_pos(0)
@@ -141,7 +141,7 @@ class Nirvana(object):
         bize_sale_one = lhb_pair.bize_sale_from_pos(0)
 
         if bize_sale_one is not None and bize_buy_two is None: # 只有卖方
-            print('%d: %s 只有卖方'%(date, symbol))
+            # print('%d: %s 只有卖方'%(date, symbol))
             return False
 
         if bize_sale_one is None and bize_buy_one is not None: # 只有买方
@@ -149,19 +149,19 @@ class Nirvana(object):
             if r == False:
                 return False
             else:
-                print('%d: %s 单方博弈可以下单'%(date, symbol))
+                # print('%d: %s 单方博弈可以下单'%(date, symbol))
                 return True
 
         # 存在买卖双方
         if lhb_pair.buy_amount() < lhb_pair.sale_amount(): # 卖方小于买方不下单
-            print('%d: %s 卖方总额大于买方总额'%(date, symbol))
+            # print('%d: %s 卖方总额大于买方总额'%(date, symbol))
             return False
 
         r = self.__lhb_buy_price(bize_buy_one, bize_buy_two, lhb_pair, date, symbol)
         if r == False:
             return False
         else:
-            print('%d: %s 双方博弈可以下单'%(date, symbol))
+            # print('%d: %s 双方博弈可以下单'%(date, symbol))
             return True
 
 
@@ -233,10 +233,10 @@ class Nirvana(object):
 
         # 判断是否达到止盈
         if tp_price <= high_price:
-            print('日期:%d 股票:%s 达到止盈价，可以平仓 止盈价:%f, 最高价:%f'%(date, position.symbol(), tp_price, high_price))
+            # print('日期:%d 股票:%s 达到止盈价，可以平仓 止盈价:%f, 最高价:%f'%(date, position.symbol(), tp_price, high_price))
             self.order_close(position.symbol(), tp_price, position.trader_id(),1, date)
         if sl_price>= low_price:
-            print('日期:%d 股票:%s 达到止损价，可以平仓 止损价:%f, 最低价:%f'%(date, position.symbol(), sl_price, low_price))
+            # print('日期:%d 股票:%s 达到止损价，可以平仓 止损价:%f, 最低价:%f'%(date, position.symbol(), sl_price, low_price))
             self.order_close(position.symbol(), sl_price, position.trader_id(),  1, date)
 
         # print('date:%d,symbol:%s,limit_price:%f,sl_price:%f,tp_price:%f,high_price:%f,low_price:%f'%(
@@ -246,7 +246,7 @@ class Nirvana(object):
         for k, value in self.long_volumes.items():
             if daily_price_list.has_key(value.symbol()[2:]):
                 daily_price = daily_price_list[value.symbol()[2:]]
-                if daily_price.is_use():
+                if daily_price.is_use() == 1 or daily_price.is_use() == -1:
                     self.__position_trade(date, daily_price, value)
     
     def on_order(self, order):
@@ -271,7 +271,7 @@ class Nirvana(object):
                 v = self.long_volumes[order.hold_volume_id()]
                 del self.long_volumes[order.hold_volume_id()]
                 profit = self.__account.close_cash(v, vol, order.fee())
-                print('%s 平仓盈利:%f'%(vol.symbol(), profit))
+                # print('%s 平仓盈利:%f'%(vol.symbol(), profit))
         # self.__account.dump()
         # print ('-------------->')
 
@@ -286,13 +286,18 @@ class Nirvana(object):
             if not daily_price_list.has_key(value.symbol()[2:]):
                 continue
             daily_price = daily_price_list[value.symbol()[2:]]
+            latest_price = 0.0 
             if not daily_price.is_use():
-                continue
-            profit= (daily_price.today_close() - value.limit_price()) * value.min_volume() * value.amount()
+                latest_price = daily_price.latest_price()
+                # profit = (daily_price.latest_price() - value.limit_price()) * value.min_volume() * value.amount()
+            else:
+                latest_price = daily_price.today_close()
+                #profit = (daily_price.today_close() - value.limit_price()) * value.min_volume() * value.amount()
+            profit = (latest_price - value.limit_price()) * value.min_volume() * value.amount()
             daily_profit += profit
-            print('symbol:%s, close_price %f, limit_price:%f, profit:%f'%(
-                value.symbol(),daily_price.today_close(), value.limit_price(),profit))
-        print('date:%d, prosition daily_profit:%f'%(date,daily_profit))
+            # print('symbol:%s, close_price %f, limit_price:%f, profit:%f'%(
+            #    value.symbol(),daily_price.today_close(), value.limit_price(),profit))
+        # print('date:%d, prosition daily_profit:%f'%(date,daily_profit))
         self.__account.set_position_profit(daily_profit)
         self.__account.dump()
         record = DailyRecord()

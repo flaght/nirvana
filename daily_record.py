@@ -51,9 +51,9 @@ class SummaryRecord(object):
         self.__daily_win_rate = chg_win_day * 100 / self.trade_count
 
     def dump(self):
-        MLog.write().info('chg_mean:%f,chg_std:%f,volatility:%f,sharp:%f,annualized_returns:%f,trade_count:%d,daily_win_rate:%f,final_value:%f,max_retr:%f',
-                    self.__chg_mean, self.__chg_std, self.__volatility, self.__sharp, self.__annualized_returns, self.trade_count,
-                    self.__daily_win_rate, self.final_value, self.__max_retr)
+        print('日对数收益:%f,日对数收益方差:%f,波动率:%f,夏普比率:%f,年化收益:%f,交易天数:%d,日胜率:%f,最终盈利:%f,最大回测:%f'
+                    %(self.__chg_mean, self.__chg_std, self.__volatility, self.__sharp, self.__annualized_returns, self.trade_count,
+                    self.__daily_win_rate, self.final_value, self.__max_retr))
 
 class DailyRecord(object):
     def __init__(self):

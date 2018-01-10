@@ -107,8 +107,17 @@ class LookBack(object):
                     continue
                 daily_price = daily_price_list[order.symbol()[2:]]
                 # 停盘
-                if daily_price.today_open() == 0.00 and daily_price.today_close() == 0.00 and daily_price.today_high() == 0.00:
+                is_used = daily_price.is_use()
+                if is_used  == 0: #停盘
                     continue
+
+                #一字跌停不能买入， 一字跌停不能卖出
+                if order.comb_offset_flag() == CombOffset.open and is_used == -1: #开仓
+                    continue;
+                
+                if order.comb_offset_flag() == CombOffset.close and is_used == -2: #平仓
+                    continue
+
                 # 今天未有成交
                 if daily_price.vol() == 0.00:
                     continue
@@ -157,16 +166,16 @@ class LookBack(object):
         for date in self.__trade_date:
             print('trader starting date：%d========>'%(date))
             # 根据委托单和持有单读取行情
-            print('get %d daily_price========>' %(date))
+            # print('get %d daily_price========>' %(date))
             daily_price_list = self.on_get_daily_price(date)
             # 送给策略，对持仓做操作
-            print('push daily_price strategy========>')
+            # print('push daily_price strategy========>')
             self.__strategy.on_market_data(date, daily_price_list)
             # 读取行情，撮合价格成交
-            print('cross_limit_order ========>')
+            # print('cross_limit_order ========>')
             self.cross_limit_order(date, daily_price_list)
             # 计算当日龙虎榜
-            print('cal today lhb =========>')
+            # print('cal today lhb =========>')
             if self.history_file.has_key(date):
                 lhb_set = self.history_file[date]
                 self.__loop_back(date, lhb_set)
@@ -180,8 +189,8 @@ class LookBack(object):
 if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
-    lb = LookBack(20160104,20180106)
-    lb.init_read_lhb('./output/out2016/')
+    lb = LookBack(20160104,20170105)
+    lb.init_read_lhb('./output/')
     lb.start()
     print('calc_result:')
     lb.calc_result()

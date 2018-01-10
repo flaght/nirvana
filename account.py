@@ -64,7 +64,8 @@ class Account(object):
     #挂单资金操作, 本身消耗，手续费, 平仓挂单只有手续费消耗
     def insert_order_cash(self, cost, fee):
         if self.__available_cash < (cost): # 可用资金不够时，补充资金
-           self.set_init_cash(100000) 
+           print('新增资金1000000')
+           self.set_init_cash(1000000) 
         self.__available_cash -= (cost + fee) # 消耗的可用资金数
         self.__cost += (cost + fee)
         self.__locked_cash += (cost + fee) # 挂单时被锁定的资金
@@ -117,7 +118,7 @@ class Account(object):
         return profit
     
     def log(self):
-        return ("account:%d,available_cash:%f,locked_cash:%f,position_cost:%f,colse_profit:%f,position_profit:%f,fee:%f,cost:%f,starting_cash:%f,deoposit:%f,withdraw:%f"%(
+        return ("account:%d,available_cash:%f,locked_cash:%f,position_cost:%f,close_profit:%f,position_profit:%f,fee:%f,cost:%f,starting_cash:%f,deoposit:%f,withdraw:%f"%(
                 self.__account_id,self.__available_cash, self.__locked_cash, 
                 self.__positions_cost, self.__close_profit, self.__position_profit, 
                 self.__fee, self.__cost,self.__starting_cash, self.__deposit, 
