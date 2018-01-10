@@ -11,6 +11,8 @@ from mlog import MLog
 from order import CombOffset,Direction
 
 GLOBAL_VOLUME_ID = 100
+
+
 class Volume(object):
     def __init__(self):
         self.__symbol = '' # 交易标的
@@ -25,7 +27,7 @@ class Volume(object):
         self.__min_volume = 0 # 最小成交量
         self.__cost = 0.0 # 实际的全部消耗，不包含了手续费
         self.__fee = 0.0 # 手续费
-        
+
         self.__commission = 0.0 # 佣金
         self.__commission_ratio = 0.0 # 佣金率
         self.__stamp = 0.0 # 印花税
@@ -44,11 +46,11 @@ class Volume(object):
             str = '空头平仓'
         elif self.__comb_offset_flag == CombOffset.close and self.__direction == Direction.sell_direction:
             str = '多头平仓'
-        
-        # print('[%s]--->Volume:trader_id:%d, order_id:%d, direction:%d, limit_price:%f, cost:%f, commission:%f, transfer:%f, stamp:%f, fee:%f, comb_offset_flag:%d, amount:%d, create_time:%d, strategy_id:%d, min_volume:%d'%(
-        #                str, self.__trader_id, self.__order_id, self.__direction.value, self.__limit_price, self.cost(), self.__commission, self.__transfer, self.__stamp,
-        #                self.fee(), self.__comb_offset_flag.value,self.__amount,self.__create_time,
-        #                self.__strategy_id,self.__min_volume))
+
+        print('[%s]--->Volume:trader_id:%d, order_id:%d, direction:%d, limit_price:%f, cost:%f, commission:%f, transfer:%f, stamp:%f, fee:%f, comb_offset_flag:%d, amount:%d, create_time:%d, strategy_id:%d, min_volume:%d'%(
+            str, self.__trader_id, self.__order_id, self.__direction.value, self.__limit_price, self.cost(), self.__commission, self.__transfer, self.__stamp,
+            self.fee(), self.__comb_offset_flag.value,self.__amount,self.__create_time,
+            self.__strategy_id,self.__min_volume))
 
 
     def trader_id(self):
@@ -75,14 +77,13 @@ class Volume(object):
     def create_trader_id(self):
         second_time = time.time()
         # self.__trader_id = second_time * 1000000 + datetime.datetime.now().microsecond
-        global GLOBAL_VOLUME_ID 
+        global GLOBAL_VOLUME_ID
         GLOBAL_VOLUME_ID += 1
         self.__trader_id = GLOBAL_VOLUME_ID
         self.__create_time = second_time
 
     def cost(self):
         return self.__limit_price * self.__min_volume * self.__amount
-
 
     def fee(self):
         # 开仓 佣金 + 过户费(上证)
@@ -91,10 +92,10 @@ class Volume(object):
             return self.__commission + self.__transfer
         elif self.__comb_offset_flag == CombOffset.close:
             return self.__commission + self.__stamp + self.__transfer
-    
+
     def min_volume(self):
         return self.__min_volume
-    
+
     def order_id(self):
         return self.__order_id
 
@@ -135,7 +136,7 @@ class Volume(object):
         self.__commission_ratio = commission_ratio
         commission = self.__limit_price * self.__amount * self.__min_volume * commission_ratio
         self.__commission = commission if commission > 5 else 5
-    
+
     # 过户费
     def set_transfer(self, transfer_ratio):
         self.__transfer_ratio = transfer_ratio

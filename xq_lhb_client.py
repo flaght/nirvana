@@ -4,6 +4,7 @@ from client import Client
 import json
 import os
 
+
 class XQLHBClient(object):
     
     def __init__(self, start_date, end_date):
@@ -16,9 +17,10 @@ class XQLHBClient(object):
     def __init_trade(self,start_date, end_date):
         trade_date = ts.trade_cal()
         for indexs in trade_date.index:
-            date_u = int(trade_date.loc[indexs].values[0].replace('-',''))
-            if start_date <=  date_u and end_date >= date_u:
-                self.__trade_date.append(date_u)
+            date_u = int(trade_date.loc[indexs].values[0].replace('-', ''))
+            if start_date <= date_u:
+                if end_date >= date_u:
+                    self.__trade_date.append(date_u)
 
     def __crawler_lhb_detail(self, symbol, trade_date):
         url = self.__base_detail + '?symbol=' + symbol + '&date=' + str(trade_date)
@@ -39,10 +41,6 @@ class XQLHBClient(object):
         file_object = open(filename, 'w')
         file_object.write(json.dumps(lhb_detail))
         file_object.close()
-        # skdaily_price = lhb_detail.get('tqQtSkdailyprice')
-        # biz_buy = lhb_detail.get('tqQtBizunittrdinfoBuyList')
-        # biz_sale = lhb_detail.get('tqQtBizunittrdinfoSaleList')
-
 
     def __crawler_lhb_list(self, trade_date):
         url = self.__base_list + '?date=' + str(trade_date)
@@ -53,7 +51,6 @@ class XQLHBClient(object):
         for lhb in lhb_list:
             symbol = lhb.get('symbol')
             self.__crawler_lhb_detail(symbol, trade_date)
-
 
     def crawler_lhb(self):
         for td in self.__trade_date:

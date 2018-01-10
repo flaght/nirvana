@@ -3,6 +3,7 @@
 from mlog import MLog
 from daily_price import DailyPrice
 from collections import OrderedDict
+
 '''
 龙虎榜数据
 '''
@@ -11,17 +12,16 @@ from collections import OrderedDict
 class LHBPair(object):
     def __init__(self):
         self.__daily_price = DailyPrice()
-        self.code_bize_buy = OrderedDict() # 买方席位 key为id
-        self.seq_bize_buy = OrderedDict() # key 为顺序
+        self.code_bize_buy = OrderedDict()  # 买方席位 key为id
+        self.seq_bize_buy = OrderedDict()  # key 为顺序
         self.code_bize_sale = OrderedDict()
         self.seq_bize_sale = OrderedDict()
         self.__buy_amount = 0
         self.__sale_amount = 0
         self.__chg_type = ''
 
-        self.__date = 0 # 交易日
-        self.__symbol = ''# 交易标的
-
+        self.__date = 0  # 交易日
+        self.__symbol = ''  # 交易标的
 
     def date(self):
         return self.__date
@@ -65,7 +65,7 @@ class LHBPair(object):
             return self.code_bize_sale[code_id]
         else:
             return None
-    
+
     def bize_buy_from_pos(self, index):
         if self.seq_bize_buy.has_key(index):
             return self.seq_bize_buy[index]
@@ -88,22 +88,21 @@ class LHBPair(object):
         self.seq_bize_sale[len(self.seq_bize_sale)] = bize_sale
         self.__sale_amount += bize_sale.amount()
 
+
 class BizeLHB(object):
-
     def __init__(self):
-        self.__trade_date = 0 # 交易日
-        self.__symbol = '' # 归属股票编码
-        self.__chg_type = '' # 涨跌类别
-        self.__bize_code = '' # 编号
-        self.__bize_name = '' # 名称
-        self.__amount = 0.0 #  成交额
-        self.__buy_vol = 0.0 # 买入量
-        self.__buy_amount = 0.0 # 买入额
-        self.__sale_vol = 0.0 # 卖出量
-        self.__sale_amount = 0.0 # 卖出额
-        self.__desc = '' # 上榜原因
+        self.__trade_date = 0  # 交易日
+        self.__symbol = ''  # 归属股票编码
+        self.__chg_type = ''  # 涨跌类别
+        self.__bize_code = ''  # 编号
+        self.__bize_name = ''  # 名称
+        self.__amount = 0.0  # 成交额
+        self.__buy_vol = 0.0  # 买入量
+        self.__buy_amount = 0.0  # 买入额
+        self.__sale_vol = 0.0  # 卖出量
+        self.__sale_amount = 0.0  # 卖出额
+        self.__desc = ''  # 上榜原因
 
-    
     def xq_parser(self, ob):
         self.__trade_date = int(ob.get('tradedate'))
         self.__chg_type = ob.get('chgtype')
@@ -121,13 +120,13 @@ class BizeLHB(object):
         self.__desc = ob.get('typedesc')
 
     def dump(self):
-        print('symbol:%s,trade_date:%d,chg_type:%s,bize_code:%s,bize_name:%s,amount:%f,buy_vol:%f,buy_amount:%f,sale_vol:%f,sale_amount:%f,desc:%s'%(
-                            self.__symbol,
-                           self.__trade_date,self.__chg_type,
-                          self.__bize_code,self.__bize_name,self.__amount,
-                          self.__buy_vol,self.__buy_amount,self.__sale_vol,
-                          self.__sale_amount,self.__desc))
-
+        print(
+        'symbol:%s,trade_date:%d,chg_type:%s,bize_code:%s,bize_name:%s,amount:%f,buy_vol:%f,buy_amount:%f,sale_vol:%f,sale_amount:%f,desc:%s' % (
+            self.__symbol,
+            self.__trade_date, self.__chg_type,
+            self.__bize_code, self.__bize_name, self.__amount,
+            self.__buy_vol, self.__buy_amount, self.__sale_vol,
+            self.__sale_amount, self.__desc))
 
     def set_symbol(self, symbol):
         self.__symbol = symbol
@@ -167,4 +166,3 @@ class BizeLHB(object):
 
     def desc(self):
         return self.__desc
-

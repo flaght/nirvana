@@ -4,31 +4,30 @@
 '''
 日行情数据
 '''
-from mlog import MLog
+
+
 class DailyPrice(object):
-    
     def __init__(self):
         self.__trade_date = 0  # 交易日
-        self.__symbol = '' # 标的
-        self.__latest_price = 0.0 # 前一个收盘
-        self.__today_open = 0.0 # 今日开盘
-        self.__today_close = 0.0 # 今日收盘
-        self.__today_high = 0.0 # 今日最高价
-        self.__today_low = 0.0 # 今日最低价
-        self.__vol = 0.0 # 成交量
-        self.__amount = 0.0 #  成交额
-        self.__change = 0.0 # 涨跌额
-        self.__pchg = 0.0 # 涨跌幅
-        self.__amplitude = 0.0 # 振幅
-        self.__deals = 0.0 # 成交笔数
-        self.__avg_price = 0.0 # 当日均价
-        self.__avg_vol = 0.0 # 平均每笔成交量
-        self.__avgtramt = 0.0 # 平均每笔成交金额
-        self.__turnrate = 0.0 # 换手率
-        self.__totmktcap = 0.0 # 总市值
-        self.__negotiablemv = 0.0 # 流通市值
+        self.__symbol = ''  # 标的
+        self.__latest_price = 0.0  # 前一个收盘
+        self.__today_open = 0.0  # 今日开盘
+        self.__today_close = 0.0  # 今日收盘
+        self.__today_high = 0.0  # 今日最高价
+        self.__today_low = 0.0  # 今日最低价
+        self.__vol = 0.0  # 成交量
+        self.__amount = 0.0  # 成交额
+        self.__change = 0.0  # 涨跌额
+        self.__pchg = 0.0  # 涨跌幅
+        self.__amplitude = 0.0  # 振幅
+        self.__deals = 0.0  # 成交笔数
+        self.__avg_price = 0.0  # 当日均价
+        self.__avg_vol = 0.0  # 平均每笔成交量
+        self.__avgtramt = 0.0  # 平均每笔成交金额
+        self.__turnrate = 0.0  # 换手率
+        self.__totmktcap = 0.0  # 总市值
+        self.__negotiablemv = 0.0  # 流通市值
 
-    
     def df_parser(self, df):
         self.__symbol = df[1]
         self.__trade_date = int(df[2])
@@ -61,15 +60,14 @@ class DailyPrice(object):
         self.__totmktcap = ob.get('totmktcap')
         self.__negotiablemv = ob.get('negotiablemv')
 
-
     def dump(self):
-        pass
-        # print('trade_date:%d,symbol:%s,latest_price:%f,today_open:%f,today_close:%f,today_high:%f,today_low:%f,vol:%f,amount:%f,change:%f,pchg:%f,amplitude:%f,deals:%f,avg_price:%f,avg_vol:%f,avgtramt:%f,turnrate:%f,totmktcap:%f,negotiablemv:%f' %(
-        #                   self.__trade_date,self.__symbol,self.__latest_price,
-        #                  self.__today_open,self.__today_close,self.__today_high,self.__today_low,
-        #                  self.__vol,self.__amount,self.__change,self.__pchg,self.__amplitude,
-        #                  self.__deals,self.__avg_price,self.__avg_vol,self.__avgtramt,
-        #                  self.__turnrate,self.__totmktcap,self.__negotiablemv))
+        print(
+            'trade_date:%d,symbol:%s,latest_price:%f,today_open:%f,today_close:%f,today_high:%f,today_low:%f,vol:%f,amount:%f,change:%f,pchg:%f,amplitude:%f,deals:%f,avg_price:%f,avg_vol:%f,avgtramt:%f,turnrate:%f,totmktcap:%f,negotiablemv:%f' % (
+                self.__trade_date, self.__symbol, self.__latest_price,
+                self.__today_open, self.__today_close, self.__today_high, self.__today_low,
+                self.__vol, self.__amount, self.__change, self.__pchg, self.__amplitude,
+                self.__deals, self.__avg_price, self.__avg_vol, self.__avgtramt,
+                self.__turnrate, self.__totmktcap, self.__negotiablemv))
 
     def set_symbol(self, symbol):
         self.__symbol = symbol
@@ -131,32 +129,38 @@ class DailyPrice(object):
     def negotiablev(self):
         return self.__negotiablemv
 
-
     def is_zero(self, price):
-        return (price > -0.000001 and price < 0.000001)
-    
+        return -0.000001 < price < 0.000001
+
     # 1 可以使用  0 不能卖，不能买 -1 不能买,可以卖  -2 不能卖,不能买
     def is_use(self):
-        #是否停牌
-        if self.is_zero(self.__today_open) or self.is_zero(self.__today_close) or self.is_zero(self.__today_high) or self.is_zero(self.__today_low):
-            # print('股票:%s 停盘 open:%f,close:%f,high:%f,low:%f'%(self.__symbol,
-            #    self.__today_open, self.__today_close, self.__today_high,self.__today_low))
+        # 是否停牌
+        if self.is_zero(self.__today_open) or self.is_zero(self.__today_close) or self.is_zero(
+                self.__today_high) or self.is_zero(self.__today_low):
+            print('股票:%s 停盘 open:%f,close:%f,high:%f,low:%f' % (self.__symbol,
+                                                                self.__today_open, self.__today_close,
+                                                                self.__today_high, self.__today_low))
             return 0
 
-        sl_price = self.__latest_price * (1 - 0.1) # 跌停
-        tp_price = self.__latest_price * (1 + 0.1) # 涨停
-        
+        sl_price = self.__latest_price * (1 - 0.1)  # 跌停
+        tp_price = self.__latest_price * (1 + 0.1)  # 涨停
+
         # 一字跌停
-        if sl_price >= self.__today_low and sl_price >= self.__today_high and (sl_price >= self.__today_close and sl_price >= self.__today_open ): # 开盘跌停一直跌停到收盘
-            # print('股票%s  一字跌停: latest_price:%f, sl_price:%f, today_low:%f, today_high:%f, today_open:%f,today_close:%f'%(
-            #    self.__symbol, self.__latest_price, sl_price, self.__today_low, self.__today_high, self.__today_open, self.__today_close))
+        if sl_price >= self.__today_low and sl_price >= self.__today_high and (
+                        sl_price >= self.__today_close and sl_price >= self.__today_open):  # 开盘跌停一直跌停到收盘
+            print(
+            '股票%s  一字跌停: latest_price:%f, sl_price:%f, today_low:%f, today_high:%f, today_open:%f,today_close:%f' % (
+                self.__symbol, self.__latest_price, sl_price, self.__today_low, self.__today_high, self.__today_open,
+                self.__today_close))
             return -2
 
         # 一字涨停
-        if tp_price <= self.__today_low and tp_price <= self.__today_high and tp_price <= self.__today_close and tp_price <= self.__today_open: # 开盘涨停一直涨停到收盘
-            # print('股票%s 一字涨停: latest_price:%f, sl_price:%f, today_low:%f, today_high:%f, today_open:%f,today_close:%f'%(
-            #    self.__symbol, self.__latest_price, sl_price, self.__today_low, self.__today_high, self.__today_open, self.__today_close))
+        if tp_price <= self.__today_low and tp_price <= self.__today_high and(
+                        tp_price <= self.__today_close and tp_price <= self.__today_open):  # 开盘涨停一直涨停到收盘
+            print(
+            '股票%s 一字涨停: latest_price:%f, sl_price:%f, today_low:%f, today_high:%f, today_open:%f,today_close:%f' % (
+                self.__symbol, self.__latest_price, sl_price, self.__today_low, self.__today_high, self.__today_open,
+                self.__today_close))
             return -1
-        
-        return 1
 
+        return 1

@@ -10,13 +10,15 @@ from mlog import MLog
 from enum import Enum, unique
 
 GLOBAL_ORDER_ID = 100
+
+
 @unique
 class CombOffset(Enum):
     open = 0 # 开仓
     close = 1 # 平仓
     force_close = 2 # 强平
     close_today = 3 # 平今
-    close_yestoday = 4 # 平昨
+    close_yesterday = 4 # 平昨
     local_force_close = 5 # 强减
 
 @unique
@@ -79,10 +81,10 @@ class Order(object):
         elif self.__comb_offset_flag == CombOffset.close and self.__direction == Direction.sell_direction:
             str = '多头平仓'
 
-        # print('[%s]--->Order:symbol:%s,order_id:%d,hold_vol_id:%d,amount:%d,status:%d,comb_offset_flag:%d,direction:%d,limit_price:%f,amount:%d,cost:%f,fee:%f,commission:%f,stamp:%f,transfer:%f,strategy_id:%d,create_time:%d,min_volume:%d,margin:%f'%(
-        #                str, self.__symbol, self.__order_id, self.__hold_volume_id, self.__amount, self.__status.value, self.__comb_offset_flag.value, 
-        #                self.__direction.value, self.__limit_price, self.__amount, self.cost(), self.fee(), self.__commission, self.__stamp, self.__transfer,
-        #                self.__strategy_id,self.__create_time,self.__min_volume, self.__margin))
+        print('[%s]--->Order:symbol:%s,order_id:%d,hold_vol_id:%d,amount:%d,status:%d,comb_offset_flag:%d,direction:%d,limit_price:%f,amount:%d,cost:%f,fee:%f,commission:%f,stamp:%f,transfer:%f,strategy_id:%d,create_time:%d,min_volume:%d,margin:%f'%(
+            str, self.__symbol, self.__order_id, self.__hold_volume_id, self.__amount, self.__status.value, self.__comb_offset_flag.value,
+            self.__direction.value, self.__limit_price, self.__amount, self.cost(), self.fee(), self.__commission, self.__stamp, self.__transfer,
+            self.__strategy_id,self.__create_time,self.__min_volume, self.__margin))
 
     def order_id(self):
         return self.__order_id
@@ -161,15 +163,12 @@ class Order(object):
     def set_symbol(self, symbol):
         self.__symbol = symbol
 
-    def set_fee_ratio(self, fee_ratio):
-        self.__fee_ratio = fee_ratio
-
     def create_order_id(self):
         second_time = time.time()
         # self.__order_id = second_time * 1000000 + datetime.datetime.now().microsecond
         global GLOBAL_ORDER_ID
         GLOBAL_ORDER_ID += 1
-        self.__order_id  = GLOBAL_ORDER_ID
+        self.__order_id = GLOBAL_ORDER_ID
         self.__create_time = second_time
 
     def set_hold_volume_id(self,hold_volume_id):
