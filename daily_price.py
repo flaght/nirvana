@@ -129,3 +129,30 @@ class DailyPrice(object):
 
     def negotiablev(self):
         return self.__negotiablemv
+
+
+    def is_zero(self, price):
+        return (price > -0.000001 and price < 0.000001)
+
+    def is_use(self):
+        #是否停牌
+        if self.is_zero(self.__today_open) or self.is_zero(self.__today_close) or self.is_zero(self.__today_high) or self.is_zero(self.__today_low):
+            print('股票:%s 停盘 open:%f,close:%f,high:%f,low:%f'%(self.__symbol,
+                self.__today_open, self.__today_close, self.__today_high,self.__today_low))
+            return False
+
+        sl_price = self.__latest_price * (1 - 0.1)
+        tp_price = self.__latest_price * (1 + 0.1)
+
+        if tp_price <= self.__today_close:
+            print('股票涨停: latest_price:%f, tp_price:%f, today_close:%f'%(
+                self.__latest_price, tp_price, self.__today_close))
+            return False
+
+        if sl_price >= self.__today_close:
+            print('股票跌停, latest_price:%f, sl_price%f, today_close:%f'%(
+                self.__latest_price, sl_price, self.__today_close))
+            return False
+
+        return True
+

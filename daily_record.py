@@ -144,7 +144,7 @@ class DailyRecord(object):
         self.__log_chg = math.log(1 - self.__value_chg)
 
     def log(self):
-        return ('mkdate:%d,interests:%f,profit:%f,total_profit:%f,max_profit:%f,value:%f,retracement:%f,base_value:%f,chg:%f,log_chg:%f'%(self.__mktime,
+        return ('交易日:%d,今日权益:%f,今日盈亏:%f,昨日累计盈亏:%f,最大盈亏:%f,今日净值:%f,最大回撤:%f,今日初始资金:%f,涨跌幅:%f,对数收益:%f'%(self.__mktime,
             self.__interests, self.all_profit(), self.__last_profit,
             self.__max_profit, self.__value, self.__retracement,
             self.__base_value,self.__value_chg,self.__log_chg))

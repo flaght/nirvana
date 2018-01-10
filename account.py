@@ -111,11 +111,10 @@ class Account(object):
         
         self.__positions_cost -= (hold_v.cost() + hold_v.fee())
         # 计算平仓盈利
-        profit = (cur_v.limit_price() - hold_v.limit_price()) * cur_v.amount() * cur_v.vol()
-
+        profit = (cur_v.limit_price() - hold_v.limit_price()) * cur_v.amount() * cur_v.min_volume()
 
         self.__close_profit += profit
-
+        return profit
     
     def log(self):
         return ("account:%d,available_cash:%f,locked_cash:%f,position_cost:%f,colse_profit:%f,position_profit:%f,fee:%f,cost:%f,starting_cash:%f,deoposit:%f,withdraw:%f"%(

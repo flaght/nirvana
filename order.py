@@ -152,6 +152,9 @@ class Order(object):
     def min_volume(self):
         return self.__min_volume
 
+    def order_price_type(self):
+        return self.__order_price_type
+
     def set_account_id(self, account_id):
         self.__account_id = account_id
 
