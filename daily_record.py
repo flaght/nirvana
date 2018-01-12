@@ -53,9 +53,9 @@ class SummaryRecord(object):
 
     def dump(self):
         print('日对数收益:%f,日对数收益方差:%f,波动率:%f,夏普比率:%f,年化收益:%f,交易天数:%d,日胜率:%f,最终盈利:%f,最大回测:%f'
-              % [self.__chg_mean, self.__chg_std, self.__volatility, self.__sharp, self.__annualized_returns,
+              % (self.__chg_mean, self.__chg_std, self.__volatility, self.__sharp, self.__annualized_returns,
                  self.trade_count,
-                 self.__daily_win_rate, self.final_value, self.__max_retr])
+                 self.__daily_win_rate, self.final_value, self.__max_retr))
 
 
 class DailyRecord(object):
@@ -63,20 +63,23 @@ class DailyRecord(object):
         self.__mktime = 0  # 交易日
         self.__account_id = ''
 
-        self.__interests = 0.0  # 上日结存 + 平仓盈亏 + 浮动盈亏(持仓盈亏) + 出入金 - 手续费 
-        self.__profit = 0.0  # 当日盈亏
-        self.__value = 0.0  # 当日净值
-        self.__value_chg = 0.0  # 涨跌幅
-        self.__log_chg = 0.0  # 日对数收益
-        self.__retracement = 0.0  # 最大回撤
+        self._interests = 0.0  # 上日结存 + 平仓盈亏 + 浮动盈亏(持仓盈亏) + 出入金 - 手续费 
+        self._profit = 0.0  # 当日盈亏
+        self._value = 0.0  # 累计净值
+        self._daily_value = 0.0 # 当日净值
+        self._value_chg = 0.0  # 涨跌幅
+        self._log_chg = 0.0  # 日对数收益
+        self._retracement = 0.0  # 最大回撤
 
-        self.__base_value = 0.0  # 当日初始可用资金
+        self.__position_cost = 0.0 # 当日持仓成本
+        self._base_value = 0.0  # 初始可用资金
+        self.__settle_available_cash = 0.0 # 结算后可用资金
         self.__close_profit = 0.0  # 平仓收益
         self.__position_profit = 0.0  # 持仓收益
         self.__fee = 0.0  # 手续费
-        self.__max_profit = 0.0  # 历史中最大收益
-        self.__last_value = 0.0  # 上一个交易日的净值
-        self.__last_profit = 0.0  # 上一个交易日的累计盈亏
+        self._max_profit = 0.0  # 历史中最大收益
+        self.last_value = 0.0  # 上一个交易日的净值
+        self._last_profit = 0.0  # 上一个交易日的累计盈亏
         self.__history_limit_volume = OrderedDict()  # 交易记录
         self.__history_limit_order = OrderedDict()  # 委托订单
 
@@ -105,49 +108,68 @@ class DailyRecord(object):
         self.__history_limit_order = copy.deepcopy(limit_order)
 
     def set_base_value(self, base_value):
-        self.__base_value = base_value
+        self._base_value = base_value
+
+    def set_settle_available_cash(self, settle_available_cash):
+        self.__settle_available_cash = settle_available_cash
+
+    def set_position_cost(self, position_cost):
+        self.__position_cost = position_cost
 
     def set_max_profit(self, max_profit):
-        self.__max_profit = max_profit
+        self._max_profit = max_profit
 
     def set_last_value(self, last_value):
-        self.__last_value = last_value
+        self.last_value = last_value
 
     def set_last_profit(self, last_profit):
-        self.__last_profit = last_profit
+        self._last_profit = last_profit
 
     def value(self):
-        return self.__value
+        return self._value
 
     def interests(self):
-        return self.__interests
+        return self._interests
 
     def retrace(self):
-        return self.__retracement
+        return self._retracement
 
     def log_chg(self):
-        return self.__log_chg
+        return self._log_chg
 
     def chg(self):
-        return self.__value_chg
+        return self._value_chg
 
     def all_profit(self):
-        self.__profit = self.__close_profit + self.__position_profit - self.__fee  # 当日盈亏
-        return self.__profit
+        self._profit = self.__close_profit + self.__position_profit - self.__fee  # 当日盈亏
+        return self._profit
 
+    def close_profit(self):
+        return self.__close_profit - self.__fee
+
+   
     def calc_result(self):
-        self.__interests = self.__base_value + self.__profit  # 每日权益
-        self.__value = self.__interests / self.__base_value
-        self.__retracement = ((abs(self.__profit + self.__last_profit - self.__max_profit)) / (
-            self.__max_profit + self.__base_value)) * 100
-        self.__value_chg = (
-            (self.__value - self.__last_value) / self.__last_value * 100) if self.__last_value != 0.0 else 0.0
-        self.__log_chg = math.log(1 - self.__value_chg)
+        self._interests = self._base_value + self._last_profit + self._profit # 当日收益
+        self._value = self._interests / self._base_value # 累计净值
+        self._daily_value = self._interests / (self._base_value + self._last_profit) # 当日净值
+        self._max_profit = self._max_profit + self._profit if self._profit > 0 else self._max_profit
+        self._retracement = (self._profit - self._max_profit) / (self._max_profit + self._base_value) * 100
+        self._value_chg = (self._value - self.last_value) / self.last_value # 净值涨跌幅
+        self._log_chg = math.log(1 - self._value_chg)
+    
+    def volume_log(self):
+        print('交易情况:')
+        for v, value in self.__history_limit_volume.items():
+            value.dump()
 
     def log(self):
-        return ('交易日:%d,今日权益:%f,今日盈亏:%f,昨日累计盈亏:%f,最大盈亏:%f,今日净值:%f,最大回撤:%f,今日初始资金:%f,涨跌幅:%f,对数收益:%f'
-                % (self.__mktime, self.__interests, self.all_profit(), self.__last_profit, self.__max_profit,
-                    self.__value, self.__retracement, self.__base_value, self.__value_chg, self.__log_chg))
+        return ('交易日:%d,今日权益:%f,今日盈亏:%f,平仓盈亏:%f,持仓盈亏:%f,持仓成本:%f,手续费:%f,昨日累计盈亏:%f,最大盈亏:%f,今日净值:%f,最大回撤:%f,今日初始资金:%f,今日结算后资金:%f,涨跌幅:%f,对数收益:%f'
+                % (self.__mktime, self._interests, self.all_profit(), self.__close_profit, self.__position_profit,self.__position_cost,self.__fee, 
+                   self._last_profit, self._max_profit,
+                    self._value, self._retracement, self._base_value,self.__settle_available_cash,
+                   self._value_chg, self._log_chg))
 
     def dump(self):
         print(self.log())
+        # self.volume_log()
+        print('\n\n')

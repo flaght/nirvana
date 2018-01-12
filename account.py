@@ -14,13 +14,13 @@ class Account(object):
         self.__available_cash = 0.0  # 可用资金
         self.__locked_cash = 0.0  # 挂单锁住资金
         # self.__margin = 0.0 # 正在使用保证金
-        self.__cost = 0.0  # 消耗成本
+        self.__cost = 0.0  # 消耗成本(不包含手续费)
         self.__positions_cost = 0.0  # 持仓成本
         # self.__total_value = 0.0 # 总权益
         self.__starting_cash = 0.0  # 初始资金
         self.__positions_value = 0.0  # 持仓价值
         # self.__pre_balance = 0.0 # 昨日账户结算净值
-        self.__fee = 0.0  # 手续费
+        self.__fee = 0.0  # 总手续费
         self.__close_profit = 0.0  # 平仓盈亏
         self.__position_profit = 0.0  # 持仓盈亏
         self.__deposit = 0  # 累计入金金额
@@ -31,7 +31,6 @@ class Account(object):
         self.__fee = 0.0
         self.__position_profit = 0.0
         self.__close_profit = 0.0
-        self.__position_profit = 0.0
 
     def close_profit(self):
         return self.__close_profit
@@ -41,6 +40,9 @@ class Account(object):
 
     def fee(self):
         return self.__fee
+
+    def cost(self):
+        return self.__cost
 
     def available_cash(self):
         return self.__available_cash
@@ -65,10 +67,10 @@ class Account(object):
     # 挂单资金操作, 本身消耗，手续费, 平仓挂单只有手续费消耗
     def insert_order_cash(self, cost, fee):
         if self.__available_cash < cost:  # 可用资金不够时，补充资金
-            print('新增资金1000000')
-            self.set_init_cash(1000000)
+            print('新增资金 100000')
+            self.set_init_cash(100000)
         self.__available_cash -= (cost + fee)  # 消耗的可用资金数
-        self.__cost += (cost + fee)
+        self.__cost += (cost)
         self.__locked_cash += (cost + fee)  # 挂单时被锁定的资金
         self.__fee += fee  # 消耗的手续费
         self.__withdraw += (cost + fee)  # 出去的资金
@@ -85,13 +87,13 @@ class Account(object):
         # 处理报单
         self.__locked_cash -= (order_cost + order_fee)
         self.__available_cash += (order_cost + order_fee)
-        self.__cost -= (order_cost + order_fee)
+        self.__cost -= (order_cost)
         self.__fee -= order_fee
         self.__deposit += (order_cost + order_fee)
-
+        self.__positions_cost += volume_cost
         # 处理成交
         self.__available_cash -= (volume_cost + volume_fee)
-        self.__cost += (volume_cost + volume_fee)
+        self.__cost += (volume_cost)
         self.__positions_cost += (volume_cost + volume_fee)
         self.__fee += volume_fee
         self.__withdraw += (volume_cost + volume_fee)
@@ -99,6 +101,7 @@ class Account(object):
     # 平仓成功后，资金操作
     def close_cash(self, hold_v, cur_v, order_fee):
         self.__locked_cash -= order_fee  # 解锁手续费，平仓建仓没有保证金
+        
         self.__available_cash += order_fee  # 退还下单时候手续费
         self.__available_cash -= cur_v.fee()  # 扣除成交的手续费
 
@@ -107,7 +110,7 @@ class Account(object):
 
         self.__available_cash += (cur_v.cost())  # 计算当前平仓时候价格 * 量
 
-        self.__positions_cost -= (hold_v.cost() + hold_v.fee())
+        self.__positions_cost -= (hold_v.cost())
         # 计算平仓盈利
         profit = (cur_v.limit_price() - hold_v.limit_price()) * cur_v.amount() * cur_v.min_volume()
 

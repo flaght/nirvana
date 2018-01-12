@@ -132,7 +132,7 @@ class DailyPrice(object):
     def is_zero(self, price):
         return -0.000001 < price < 0.000001
 
-    # 1 可以使用  0 不能卖，不能买 -1 不能买,可以卖  -2 不能卖,不能买
+    # 1 可以使用  0 不能卖，不能买 -1 不能买,可以卖  -2 不能卖,可以买
     def is_use(self):
         # 是否停牌
         if self.is_zero(self.__today_open) or self.is_zero(self.__today_close) or self.is_zero(

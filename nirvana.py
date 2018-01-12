@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import time
 
-DEFAULT_CASH = 2000000
+DEFAULT_CASH = 100000
 
 
 class Nirvana(object):
@@ -22,7 +22,7 @@ class Nirvana(object):
     def __init__(self, limit_order):
 
         self.__sl = 0.03  # 止损
-        self.__tp = 0.08  # 止盈
+        self.__tp = 0.06  # 止盈
 
         self.__commission_ratio = 0.0015  # 交易佣金
         self.__stamp_ratio = 0.001  # 印花税率
@@ -33,15 +33,15 @@ class Nirvana(object):
         self.__limit_order = OrderedDict()  # 委托单队列
 
         self.__history_limit_order = OrderedDict()  # 历史委托单
-        self.__history_limit_volumes = OrderedDict()  # 历史成交记录
+        self.history_limit_volumes = OrderedDict()  # 历史成交记录
 
         self.__working_limit_order = limit_order
 
         self.__trader_record = OrderedDict()  # 交易记录存储
 
-        self.__account = Account()
-        self.__account.set_account_id(self.__account_id)
-        self.__account.set_init_cash(DEFAULT_CASH)
+        self.account = Account()
+        self.account.set_account_id(self.__account_id)
+        self.account.set_init_cash(DEFAULT_CASH)
 
         self.long_volumes = OrderedDict()  # 持有多头仓
         self.short_volumes = OrderedDict()  # 持有空头仓
@@ -49,7 +49,7 @@ class Nirvana(object):
 
     def __reset(self):
         self.__limit_order.clear()
-        self.__history_limit_volumes.clear()
+        self.history_limit_volumes.clear()
         self.__history_limit_order.clear()
 
     def __init_lhb_chg(self):
@@ -109,9 +109,11 @@ class Nirvana(object):
         return lhb_dict
 
     def __lhb_buy_price(self, bize_buy_one, bize_buy_two, lhb_pair, date, symbol):
+        '''
         if bize_buy_two is None and bize_buy_one is not None:  # 只有买一方， 防止一家独大
             # print('%d: %s 只有买一方，存在一家独大危险'%(date, symbol))
             return False
+
         if bize_buy_one.amount() / bize_buy_two.amount() > 1.5:  # 买一方和买二方相差太大
             # print('%d: %s 买一方和买二方相差太大'%(date, symbol))
             return False
@@ -120,6 +122,7 @@ class Nirvana(object):
         if bize_sale_opp is not None:
             # print('%d: %s 买一方非单纯买方'%(date, symbol))
             return False
+        '''
         return True
 
     def __lhb_price_strategy(self, lhb_pair):
@@ -162,7 +165,7 @@ class Nirvana(object):
         order = self.__create_order_price(symbol, stop_price, amount, hold_volume_id, CombOffset.close,
                                           Direction.sell_direction, OrderPrice.limit_price,
                                           create_time)
-        order.dump()
+        # order.dump()
         self.__working_limit_order[order.order_id()] = order
 
     def order_open(self, symbol, avg_price, amount, create_time):
@@ -170,7 +173,7 @@ class Nirvana(object):
                                           Direction.buy_direction, OrderPrice.avg_price,
                                           create_time)
 
-        order.dump()
+        # order.dump()
         self.__working_limit_order[order.order_id()] = order
 
     # 先以当前行情均价创建，成交以当天行情均价成交
@@ -226,10 +229,10 @@ class Nirvana(object):
 
         # 判断是否达到止盈
         if tp_price <= high_price:
-            # print('日期:%d 股票:%s 达到止盈价，可以平仓 止盈价:%f, 最高价:%f'%(date, position.symbol(), tp_price, high_price))
+            print('日期:%d 股票:%s 达到止盈价，可以平仓 止盈价:%f, 最高价:%f'%(date, position.symbol(), tp_price, high_price))
             self.order_close(position.symbol(), tp_price, position.trader_id(), 1, date)
         if sl_price >= low_price:
-            # print('日期:%d 股票:%s 达到止损价，可以平仓 止损价:%f, 最低价:%f'%(date, position.symbol(), sl_price, low_price))
+            print('日期:%d 股票:%s 达到止损价，可以平仓 止损价:%f, 最低价:%f'%(date, position.symbol(), sl_price, low_price))
             self.order_close(position.symbol(), sl_price, position.trader_id(), 1, date)
 
             # print('date:%d,symbol:%s,limit_price:%f,sl_price:%f,tp_price:%f,high_price:%f,low_price:%f'%(
@@ -239,12 +242,16 @@ class Nirvana(object):
         for k, value in self.long_volumes.items():
             if daily_price_list.has_key(value.symbol()[2:]):
                 daily_price = daily_price_list[value.symbol()[2:]]
-                if daily_price.is_use == 1 or daily_price.is_use == -1:
+                # print('date:%d, symbol:%s, use:%d'%(date, daily_price.symbol(), daily_price.is_use()))
+                if daily_price.is_use() == 1 or daily_price.is_use() == -1:
                     self.__position_trade(date, daily_price, value)
 
     def on_order(self, order):
         if order.status() == OrderStatus.entrust_traded:  # 委托成功锁住费用
-            self.__account.insert_order_cash(order.cost(), order.fee())
+            if order.comb_offset_flag() == CombOffset.open:
+                self.account.insert_order_cash(order.cost(), order.fee())
+            else:
+                self.account.insert_order_cash(0, order.fee())
             self.__limit_order[order.order_id()] = order
         elif order.status() == OrderStatus.all_traded:  # 交易成功 改变状态
             self.__limit_order[order.order_id()] = order
@@ -252,20 +259,18 @@ class Nirvana(object):
     def on_volume(self, vol, order):
         # 从委托中删除
         del self.__limit_order[vol.order_id()]
-        self.__history_limit_volumes[vol.trader_id()] = vol
+        self.history_limit_volumes[vol.trader_id()] = vol
         self.__history_limit_order[order.order_id()] = order
-        vol.dump()
 
         if vol.comb_offset_flag() == CombOffset.open:  # 开仓
-            self.__account.open_cash(order.cost(), vol.cost(), order.fee(), vol.fee())
+            self.account.open_cash(order.cost(), vol.cost(), order.fee(), vol.fee())
             self.long_volumes[vol.trader_id()] = vol
         else:
             if self.long_volumes.has_key(order.hold_volume_id()):
                 v = self.long_volumes[order.hold_volume_id()]
+                profit = self.account.close_cash(v, vol, order.fee())
+                print('%s 平仓盈利:%f'%(vol.symbol(), profit)) 
                 del self.long_volumes[order.hold_volume_id()]
-                profit = self.__account.close_cash(v, vol, order.fee())
-                print('%s 平仓盈利:%f'%(vol.symbol(), profit))
-                self.__account.dump()
 
     def on_lhb_event(self, ob, date):
         lhb_dict = self.__lhb_parser(ob, date)
@@ -273,35 +278,56 @@ class Nirvana(object):
 
     def calc_settle(self, date, daily_price_list):  # 计算当日结算
         daily_profit = 0.0
+        daily_cost = 0.0
         print('calc_settle trade_date:%d' % date)
         for vid, value in self.long_volumes.items():
             if not daily_price_list.has_key(value.symbol()[2:]):
                 continue
             daily_price = daily_price_list[value.symbol()[2:]]
-            if not daily_price.is_use:
-                latest_price = daily_price.latest_price()
-            else:
-                latest_price = daily_price.today_close()
-            profit = (latest_price - value.limit_price()) * value.min_volume() * value.amount()
-            daily_profit += profit
-            print('symbol:%s, close_price %f, limit_price:%f, profit:%f' % [
-                value.symbol(), daily_price.today_close(), value.limit_price(), profit])
 
-        print('date:%d, position daily_profit:%f' % [date, daily_profit])
-        self.__account.set_position_profit(daily_profit)
-        self.__account.dump()
+            #若停牌则以最近收盘价为结算价
+            if daily_price.is_use() == 0 :
+                settle_price = daily_price.latest_price()
+
+            else:
+                settle_price = daily_price.today_close() 
+            
+            value.set_settle_price(date,settle_price)
+
+            daily_profit += value.daily_profit()
+
+            daily_cost += value.cost()
+            print('symbol:%s, settle_price %f, limit_pricee:%f, daily_profit:%f profit:%f' % (
+                value.symbol(), settle_price, value.limit_price(), value.daily_profit(), value.profit()))
+            self.long_volumes[vid] = value
+            
+            if self.history_limit_volumes.has_key(vid):
+                self.history_limit_volumes[vid] = value
+
+        print('date:%d, position daily_profit:%f' % (date, daily_profit))
+        
+        daily_fee = 0.0
+        for vid,vvol in self.history_limit_volumes.items():
+            # print vvol.dump()
+            daily_fee += vvol.fee()
+
+        self.account.set_position_profit(daily_profit)
         record = DailyRecord()
-        record.set_close_profit(self.__account.close_profit())
-        record.set_position_profit(self.__account.position_profit())
-        record.set_limit_volume(self.__history_limit_volumes)
+        record.set_position_cost(daily_cost)
+        record.set_settle_available_cash(self.account.available_cash())
+        record.set_close_profit(self.account.close_profit())
+        record.set_position_profit(self.account.position_profit())
+        record.set_limit_volume(self.history_limit_volumes)
         record.set_limit_order(self.__history_limit_order)
-        record.set_fee(self.__account.fee())
+       
+        account_fee = self.account.fee()
+        record.set_fee(daily_fee)
         record.set_mktime(date)
         print('mkdate:%d, available_cash:%f, profit:%f' % (record.mktime(),
-                                                           self.__account.available_cash(),
+                                                           self.account.available_cash(),
                                                            record.all_profit()))
         self.__trader_record[record.mktime()] = record
-        self.__account.reset()
+        self.account.reset()
         self.__reset()
 
     def calc_result(self):
@@ -310,14 +336,14 @@ class Nirvana(object):
         for key, value in self.__trader_record.items():
             total_profit += value.all_profit()
 
-        starting_cash = self.__account.starting_cash()
-        base_value = (int(abs(total_profit) / starting_cash) + 1) * self.__account.starting_cash()
+        starting_cash = self.account.starting_cash()
+        base_value = (int(abs(total_profit) / starting_cash) + 1) * self.account.starting_cash()
         print('all:%f, base_value:%f' % (total_profit, base_value))
         total_profit = 0.0
 
         df = pd.DataFrame(columns=['mktime', 'interests', 'value', 'retrace', 'chg', 'log_chg', 'profit'])
         # 计算每日权益，每日净值, 涨跌幅，回撤，日对数收益
-        last_value = 0.0
+        last_value = 1.0
         for mktime, daily_record in self.__trader_record.items():
             daily_record.set_base_value(base_value)
             daily_record.set_last_value(last_value)
@@ -334,7 +360,8 @@ class Nirvana(object):
             if max_profit < total_profit:
                 max_profit = total_profit
             last_value = daily_record.value()
-            base_value += daily_record.all_profit()
+            # base_value += daily_record.close_profit()
+            # base_value += daily_record.all_profit()
 
         chg_mean = np.mean(df['log_chg'])
         chg_std = np.std(df['log_chg'])

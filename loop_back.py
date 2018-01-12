@@ -71,7 +71,6 @@ class LookBack(object):
             data = df.loc[indexs].values
             daily_price = DailyPrice()
             daily_price.df_parser(data)
-            # daily_price.dump()
             daily_price_list[daily_price.symbol()] = daily_price
         return daily_price_list
 
@@ -99,10 +98,6 @@ class LookBack(object):
         # 遍历所有的限价单
         for order_id, order in self.__working_limit_order.items():
             if order.status() == OrderStatus.not_traded:
-                # 委托成功推送到策略
-                order.set_status(OrderStatus.entrust_traded)
-                self.__strategy.on_order(order)
-
                 # 以均价进行撮合
                 # 行情不存在
                 if not daily_price_list.has_key(order.symbol()[2:]):
@@ -130,8 +125,16 @@ class LookBack(object):
                 if not daily_price.is_use:  # 停牌或涨跌停
                     continue
 
-                order.set_status(OrderStatus.all_traded)
+                if order_id in self.__working_limit_order:
+                    del self.__working_limit_order[order_id]
+                # 委托成功推送到策略
+                order.set_status(OrderStatus.entrust_traded)
 
+                order.dump()
+                self.__strategy.on_order(order)
+                
+                
+                order.set_status(OrderStatus.all_traded)
                 self.__strategy.on_order(order)
 
                 vol = Volume()
@@ -161,8 +164,6 @@ class LookBack(object):
                         del self.working_limit_volume[order.hold_volume_id()]
                 self.__strategy.on_volume(vol, order)
 
-                if order_id in self.__working_limit_order:
-                    del self.__working_limit_order[order_id]
 
     def start(self):
         for date in self.__trade_date:
@@ -170,20 +171,22 @@ class LookBack(object):
             # 根据委托单和持有单读取行情
             print('get %d daily_price========>' %(date))
             daily_price_list = self.on_get_daily_price(date)
-            # 送给策略，对持仓做操作
-            print('push daily_price strategy========>')
-            self.__strategy.on_market_data(date, daily_price_list)
-            # 读取行情，撮合价格成交
-            print('cross_limit_order ========>')
-            self.cross_limit_order(date, daily_price_list)
+           
+            if daily_price_list is not None and len(daily_price_list) > 0:
+                # 送给策略，对持仓做操作
+                print('push daily_price strategy========>')
+                self.__strategy.on_market_data(date, daily_price_list)
+                # 读取行情，撮合价格成交
+                print('cross_limit_order ========>')
+                self.cross_limit_order(date, daily_price_list)
+                # 当天结算
+                print('today calc settle=========>')
+                self.__strategy.calc_settle(date, daily_price_list)
             # 计算当日龙虎榜
             print('cal today lhb =========>')
             if self.history_file.has_key(date):
                 lhb_set = self.history_file[date]
                 self.__loop_back(date, lhb_set)
-            # 当天结算
-            print('today calc settle=========>')
-            self.__strategy.calc_settle(date, daily_price_list)
             print('\n\n\n')
 
     def calc_result(self):
@@ -193,7 +196,7 @@ class LookBack(object):
 if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
-    lb = LookBack(20160104, 20170105)
+    lb = LookBack(20160104, 20180105)
     lb.init_read_lhb('./output/')
     lb.start()
     print('calc_result:')

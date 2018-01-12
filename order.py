@@ -215,10 +215,9 @@ class Order(object):
     
     # 过户费
     def set_transfer(self, transfer_ratio):
-        self.__transfer_ratio = transfer_ratio
-        # self.__transfer = int((self.__amount * self.__min_volume) / 1000 + 1) * transfer_ratio
-        self.__transfer = int((self.__amount * self.__min_volume) * transfer_ratio) + 1
-
+        self.__transfer_ratio  = transfer_ratio if self.__symbol[0:2] == 'SH' else 0.0
+        self.__transfer = int((self.__amount * self.__min_volume) * transfer_ratio) + 1 if self.__symbol[0:2]=='SH' else 0.0
+    
     def set_margin(self, margin_ratio):
         self.__margin = self.__limit_price * self.__min_volume * margin_ratio
         self.__margin_ratio = margin_ratio
