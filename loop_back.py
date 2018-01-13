@@ -196,7 +196,7 @@ class LookBack(object):
 if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
-    lb = LookBack(20160104, 20180105)
+    lb = LookBack(20160104, 20160201)
     lb.init_read_lhb('./output/')
     lb.start()
     print('calc_result:')

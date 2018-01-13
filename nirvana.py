@@ -297,14 +297,15 @@ class Nirvana(object):
             daily_profit += value.daily_profit()
 
             daily_cost += value.cost()
-            print('symbol:%s, settle_price %f, limit_pricee:%f, daily_profit:%f profit:%f' % (
-                value.symbol(), settle_price, value.limit_price(), value.daily_profit(), value.profit()))
+            # print('symbol:%s, settle_price %f, limit_pricee:%f, daily_profit:%f profit:%f' % (
+            #    value.symbol(), settle_price, value.limit_price(), value.daily_profit(), value.profit()))
+            
             self.long_volumes[vid] = value
             
             if self.history_limit_volumes.has_key(vid):
                 self.history_limit_volumes[vid] = value
 
-        print('date:%d, position daily_profit:%f' % (date, daily_profit))
+        # print('date:%d, position daily_profit:%f' % (date, daily_profit))
         
         daily_fee = 0.0
         for vid,vvol in self.history_limit_volumes.items():
@@ -313,19 +314,14 @@ class Nirvana(object):
 
         self.account.set_position_profit(daily_profit)
         record = DailyRecord()
-        record.set_position_cost(daily_cost)
-        record.set_settle_available_cash(self.account.available_cash())
-        record.set_close_profit(self.account.close_profit())
-        record.set_position_profit(self.account.position_profit())
-        record.set_limit_volume(self.history_limit_volumes)
-        record.set_limit_order(self.__history_limit_order)
-       
-        account_fee = self.account.fee()
-        record.set_fee(daily_fee)
+        record.set_position_cost(daily_cost) # 当日持仓成本 
+        record.set_close_profit(self.account.close_profit()) # 当日平仓盈亏
+        record.set_position_profit(self.account.position_profit()) # 当日持仓盈亏
+        record.set_limit_volume(self.history_limit_volumes) # 当日交易记录
+        record.set_limit_order(self.__history_limit_order) # 当日下单记录 
+        record.set_fee(daily_fee) # 当日手续费消耗
         record.set_mktime(date)
-        print('mkdate:%d, available_cash:%f, profit:%f' % (record.mktime(),
-                                                           self.account.available_cash(),
-                                                           record.all_profit()))
+
         self.__trader_record[record.mktime()] = record
         self.account.reset()
         self.__reset()
@@ -341,38 +337,36 @@ class Nirvana(object):
         print('all:%f, base_value:%f' % (total_profit, base_value))
         total_profit = 0.0
 
-        df = pd.DataFrame(columns=['mktime', 'interests', 'value', 'retrace', 'chg', 'log_chg', 'profit'])
+        summary_record = SummaryRecord()
         # 计算每日权益，每日净值, 涨跌幅，回撤，日对数收益
         last_value = 1.0
+        last_available_cash = base_value
         for mktime, daily_record in self.__trader_record.items():
             daily_record.set_base_value(base_value)
             daily_record.set_last_value(last_value)
             daily_record.set_max_profit(max_profit)
             daily_record.set_last_profit(total_profit)
+            daily_record.set_last_available_cash(last_available_cash)
             daily_record.calc_result()
             daily_record.dump()
-            df = df.append(pd.DataFrame({'mktime': mktime, 'interests': daily_record.interests(),
-                                         'value': daily_record.value(), 'retrace': daily_record.retrace(),
-                                         'chg': daily_record.chg(), 'log_chg': daily_record.log_chg(),
-                                         'profit': daily_record.all_profit()}, index=['mktime']), ignore_index=True)
+            summary_record.record_daily(daily_record.to_csv(),daily_record.to_dataframe())
 
             total_profit += daily_record.all_profit()
             if max_profit < total_profit:
                 max_profit = total_profit
             last_value = daily_record.value()
-            # base_value += daily_record.close_profit()
-            # base_value += daily_record.all_profit()
+            last_available_cash = daily_record.last_available_cash() 
 
-        chg_mean = np.mean(df['log_chg'])
-        chg_std = np.std(df['log_chg'])
+        # chg_mean = np.mean(df['log_chg'])
+        # chg_std = np.std(df['log_chg'])
 
-        summary_record = SummaryRecord()
-        summary_record.set_chg_mean(chg_mean)
-        summary_record.set_chg_std(chg_std)
-        summary_record.set_trade_count(df.shape[0])
-        summary_record.set_final_value(df['value'].values[-1])
-        summary_record.set_max_retr(np.min(df['retrace']))
+        # summary_record.set_chg_mean(chg_mean)
+        # summary_record.set_chg_std(chg_std)
+        # summary_record.set_trade_count(df.shape[0])
+        # summary_record.set_final_value(df['value'].values[-1])
+        # summary_record.set_max_retr(np.min(df['retrace']))
 
-        summary_record.calc_record(df[df['chg'] > 0.00].shape[0])
-        summary_record.dump()
-        df.to_csv(str(time.time()) + 'result_strange.csv', encoding='utf-8')
+        # summary_record.calc_record(df[df['chg'] > 0.00].shape[0])
+        # summary_record.dump()
+        summary_record.calc_record()
+        summary_record.summary_record()
