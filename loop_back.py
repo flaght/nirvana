@@ -7,12 +7,13 @@ import sys
 import pandas as pd
 import tushare as ts
 import json
+from mlog import  MLog
 from data_source import GetDataEngine
 from daily_price import DailyPrice
 from order import Direction, OrderStatus, CombOffset, OrderPrice
 from volume import Volume
 from nirvana import Nirvana
-
+import config
 
 class LookBack(object):
     __strategy_id = 1002
@@ -167,27 +168,27 @@ class LookBack(object):
 
     def start(self):
         for date in self.__trade_date:
-            print('trader starting date：%d========>' % (date))
+            MLog.write().debug('trader starting date：%d========>' % (date))
             # 根据委托单和持有单读取行情
-            print('get %d daily_price========>' %(date))
+            MLog.write().debug('get %d daily_price========>' %(date))
             daily_price_list = self.on_get_daily_price(date)
            
             if daily_price_list is not None and len(daily_price_list) > 0:
                 # 送给策略，对持仓做操作
-                print('push daily_price strategy========>')
+                MLog.write().debug('push daily_price strategy========>')
                 self.__strategy.on_market_data(date, daily_price_list)
                 # 读取行情，撮合价格成交
-                print('cross_limit_order ========>')
+                MLog.write().debug('cross_limit_order ========>')
                 self.cross_limit_order(date, daily_price_list)
                 # 当天结算
-                print('today calc settle=========>')
+                MLog.write().debug('today calc settle=========>')
                 self.__strategy.calc_settle(date, daily_price_list)
             # 计算当日龙虎榜
-            print('cal today lhb =========>')
+            MLog.write().debug('cal today lhb =========>')
             if self.history_file.has_key(date):
                 lhb_set = self.history_file[date]
                 self.__loop_back(date, lhb_set)
-            print('\n\n\n')
+            MLog.write().debug('\n')
 
     def calc_result(self):
         self.__strategy.calc_result()
@@ -196,8 +197,8 @@ class LookBack(object):
 if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
-    lb = LookBack(20160104, 20160201)
+    MLog.config(name='nirvana')
+    lb = LookBack(20160104, 20180105)
     lb.init_read_lhb('./output/')
     lb.start()
-    print('calc_result:')
     lb.calc_result()

@@ -7,9 +7,7 @@ from account import Account
 from daily_record import DailyRecord, SummaryRecord
 from daily_price import DailyPrice
 from bize_lhb import BizeLHB, LHBPair
-import pandas as pd
-import numpy as np
-import time
+from mlog import MLog
 
 DEFAULT_CASH = 100000
 
@@ -111,16 +109,16 @@ class Nirvana(object):
     def __lhb_buy_price(self, bize_buy_one, bize_buy_two, lhb_pair, date, symbol):
         '''
         if bize_buy_two is None and bize_buy_one is not None:  # 只有买一方， 防止一家独大
-            # print('%d: %s 只有买一方，存在一家独大危险'%(date, symbol))
+            # MLog.write().debug('%d: %s 只有买一方，存在一家独大危险'%(date, symbol))
             return False
 
         if bize_buy_one.amount() / bize_buy_two.amount() > 1.5:  # 买一方和买二方相差太大
-            # print('%d: %s 买一方和买二方相差太大'%(date, symbol))
+            # MLog.write().debug('%d: %s 买一方和买二方相差太大'%(date, symbol))
             return False
 
         bize_sale_opp = lhb_pair.bize_sale_from_code(bize_buy_one.bize_code())
         if bize_sale_opp is not None:
-            # print('%d: %s 买一方非单纯买方'%(date, symbol))
+            # MLog.write().debug('%d: %s 买一方非单纯买方'%(date, symbol))
             return False
         '''
         return True
@@ -130,7 +128,7 @@ class Nirvana(object):
         symbol = lhb_pair.symbol()
         date = lhb_pair.date()
         if self.lhb[lhb_pair.chg_type()] == -1:  # 负面上榜不下单
-            # print('%d: %s 负面上榜不下单'%(date, symbol))
+            # MLog.write().debug('%d: %s 负面上榜不下单'%(date, symbol))
             return False
 
         bize_buy_one = lhb_pair.bize_buy_from_pos(0)
@@ -138,7 +136,7 @@ class Nirvana(object):
         bize_sale_one = lhb_pair.bize_sale_from_pos(0)
 
         if bize_sale_one is not None and bize_buy_two is None:  # 只有卖方
-            # print('%d: %s 只有卖方'%(date, symbol))
+            # MLog.write().debug('%d: %s 只有卖方'%(date, symbol))
             return False
 
         if bize_sale_one is None and bize_buy_one is not None:  # 只有买方
@@ -146,19 +144,19 @@ class Nirvana(object):
             if r == False:
                 return False
             else:
-                # print('%d: %s 单方博弈可以下单'%(date, symbol))
+                # MLog.write().debug('%d: %s 单方博弈可以下单'%(date, symbol))
                 return True
 
         # 存在买卖双方
         if lhb_pair.buy_amount() < lhb_pair.sale_amount():  # 卖方小于买方不下单
-            # print('%d: %s 卖方总额大于买方总额'%(date, symbol))
+            # MLog.write().debug('%d: %s 卖方总额大于买方总额'%(date, symbol))
             return False
 
         r = self.__lhb_buy_price(bize_buy_one, bize_buy_two, lhb_pair, date, symbol)
         if r == False:
             return False
         else:
-            # print('%d: %s 双方博弈可以下单'%(date, symbol))
+            # MLog.write().debug('%d: %s 双方博弈可以下单'%(date, symbol))
             return True
 
     def order_close(self, symbol, stop_price, hold_volume_id, amount, create_time):
@@ -229,20 +227,20 @@ class Nirvana(object):
 
         # 判断是否达到止盈
         if tp_price <= high_price:
-            print('日期:%d 股票:%s 达到止盈价，可以平仓 止盈价:%f, 最高价:%f'%(date, position.symbol(), tp_price, high_price))
+            MLog.write().debug('日期:%d 股票:%s 达到止盈价，可以平仓 止盈价:%f, 最高价:%f'%(date, position.symbol(), tp_price, high_price))
             self.order_close(position.symbol(), tp_price, position.trader_id(), 1, date)
         if sl_price >= low_price:
-            print('日期:%d 股票:%s 达到止损价，可以平仓 止损价:%f, 最低价:%f'%(date, position.symbol(), sl_price, low_price))
+            MLog.write().debug('日期:%d 股票:%s 达到止损价，可以平仓 止损价:%f, 最低价:%f'%(date, position.symbol(), sl_price, low_price))
             self.order_close(position.symbol(), sl_price, position.trader_id(), 1, date)
 
-            # print('date:%d,symbol:%s,limit_price:%f,sl_price:%f,tp_price:%f,high_price:%f,low_price:%f'%(
+            # MLog.write().debug('date:%d,symbol:%s,limit_price:%f,sl_price:%f,tp_price:%f,high_price:%f,low_price:%f'%(
             #    date, position.symbol(), position.limit_price(),sl_price,tp_price,high_price,low_price))
 
     def on_market_data(self, date, daily_price_list):
         for k, value in self.long_volumes.items():
             if daily_price_list.has_key(value.symbol()[2:]):
                 daily_price = daily_price_list[value.symbol()[2:]]
-                # print('date:%d, symbol:%s, use:%d'%(date, daily_price.symbol(), daily_price.is_use()))
+                # MLog.write().debug('date:%d, symbol:%s, use:%d'%(date, daily_price.symbol(), daily_price.is_use()))
                 if daily_price.is_use() == 1 or daily_price.is_use() == -1:
                     self.__position_trade(date, daily_price, value)
 
@@ -269,7 +267,7 @@ class Nirvana(object):
             if self.long_volumes.has_key(order.hold_volume_id()):
                 v = self.long_volumes[order.hold_volume_id()]
                 profit = self.account.close_cash(v, vol, order.fee())
-                print('%s 平仓盈利:%f'%(vol.symbol(), profit)) 
+                MLog.write().debug('%s 平仓盈利:%f'%(vol.symbol(), profit)) 
                 del self.long_volumes[order.hold_volume_id()]
 
     def on_lhb_event(self, ob, date):
@@ -279,7 +277,7 @@ class Nirvana(object):
     def calc_settle(self, date, daily_price_list):  # 计算当日结算
         daily_profit = 0.0
         daily_cost = 0.0
-        print('calc_settle trade_date:%d' % date)
+        MLog.write().debug('calc_settle trade_date:%d' % date)
         for vid, value in self.long_volumes.items():
             if not daily_price_list.has_key(value.symbol()[2:]):
                 continue
@@ -297,7 +295,7 @@ class Nirvana(object):
             daily_profit += value.daily_profit()
 
             daily_cost += value.cost()
-            # print('symbol:%s, settle_price %f, limit_pricee:%f, daily_profit:%f profit:%f' % (
+            # MLog.write().debug('symbol:%s, settle_price %f, limit_pricee:%f, daily_profit:%f profit:%f' % (
             #    value.symbol(), settle_price, value.limit_price(), value.daily_profit(), value.profit()))
             
             self.long_volumes[vid] = value
@@ -305,11 +303,11 @@ class Nirvana(object):
             if self.history_limit_volumes.has_key(vid):
                 self.history_limit_volumes[vid] = value
 
-        # print('date:%d, position daily_profit:%f' % (date, daily_profit))
+        # MLog.write().debug('date:%d, position daily_profit:%f' % (date, daily_profit))
         
         daily_fee = 0.0
         for vid,vvol in self.history_limit_volumes.items():
-            # print vvol.dump()
+            # MLog.write().debug vvol.dump()
             daily_fee += vvol.fee()
 
         self.account.set_position_profit(daily_profit)
@@ -334,7 +332,7 @@ class Nirvana(object):
 
         starting_cash = self.account.starting_cash()
         base_value = (int(abs(total_profit) / starting_cash) + 1) * self.account.starting_cash()
-        print('all:%f, base_value:%f' % (total_profit, base_value))
+        MLog.write().debug('all:%f, base_value:%f' % (total_profit, base_value))
         total_profit = 0.0
 
         summary_record = SummaryRecord()

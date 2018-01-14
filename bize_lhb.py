@@ -120,7 +120,7 @@ class BizeLHB(object):
         self.__desc = ob.get('typedesc')
 
     def dump(self):
-        print(
+        MLog.write().debug(
         'symbol:%s,trade_date:%d,chg_type:%s,bize_code:%s,bize_name:%s,amount:%f,buy_vol:%f,buy_amount:%f,sale_vol:%f,sale_amount:%f,desc:%s' % (
             self.__symbol,
             self.__trade_date, self.__chg_type,

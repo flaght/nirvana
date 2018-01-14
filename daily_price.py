@@ -5,6 +5,7 @@
 日行情数据
 '''
 
+from mlog import MLog
 
 class DailyPrice(object):
     def __init__(self):
@@ -61,7 +62,7 @@ class DailyPrice(object):
         self.__negotiablemv = ob.get('negotiablemv')
 
     def dump(self):
-        print(
+        MLog.write().debug(
             'trade_date:%d,symbol:%s,latest_price:%f,today_open:%f,today_close:%f,today_high:%f,today_low:%f,vol:%f,amount:%f,change:%f,pchg:%f,amplitude:%f,deals:%f,avg_price:%f,avg_vol:%f,avgtramt:%f,turnrate:%f,totmktcap:%f,negotiablemv:%f' % (
                 self.__trade_date, self.__symbol, self.__latest_price,
                 self.__today_open, self.__today_close, self.__today_high, self.__today_low,
@@ -137,7 +138,7 @@ class DailyPrice(object):
         # 是否停牌
         if self.is_zero(self.__today_open) or self.is_zero(self.__today_close) or self.is_zero(
                 self.__today_high) or self.is_zero(self.__today_low):
-            print('股票:%s 停盘 open:%f,close:%f,high:%f,low:%f' % (self.__symbol,
+            MLog.write().debug('股票:%s 停盘 open:%f,close:%f,high:%f,low:%f' % (self.__symbol,
                                                                 self.__today_open, self.__today_close,
                                                                 self.__today_high, self.__today_low))
             return 0
@@ -148,7 +149,7 @@ class DailyPrice(object):
         # 一字跌停
         if sl_price >= self.__today_low and sl_price >= self.__today_high and (
                         sl_price >= self.__today_close and sl_price >= self.__today_open):  # 开盘跌停一直跌停到收盘
-            print(
+            MLog.write().debug(
             '股票%s  一字跌停: latest_price:%f, sl_price:%f, today_low:%f, today_high:%f, today_open:%f,today_close:%f' % (
                 self.__symbol, self.__latest_price, sl_price, self.__today_low, self.__today_high, self.__today_open,
                 self.__today_close))
@@ -157,7 +158,7 @@ class DailyPrice(object):
         # 一字涨停
         if tp_price <= self.__today_low and tp_price <= self.__today_high and(
                         tp_price <= self.__today_close and tp_price <= self.__today_open):  # 开盘涨停一直涨停到收盘
-            print(
+            MLog.write().debug(
             '股票%s 一字涨停: latest_price:%f, sl_price:%f, today_low:%f, today_high:%f, today_open:%f,today_close:%f' % (
                 self.__symbol, self.__latest_price, sl_price, self.__today_low, self.__today_high, self.__today_open,
                 self.__today_close))

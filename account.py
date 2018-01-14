@@ -67,7 +67,7 @@ class Account(object):
     # 挂单资金操作, 本身消耗，手续费, 平仓挂单只有手续费消耗
     def insert_order_cash(self, cost, fee):
         if self.__available_cash < cost:  # 可用资金不够时，补充资金
-            print('新增资金 100000')
+            MLog.write().debug('新增资金 100000')
             self.set_init_cash(100000)
         self.__available_cash -= (cost + fee)  # 消耗的可用资金数
         self.__cost += (cost)
@@ -126,4 +126,4 @@ class Account(object):
             self.__withdraw))
 
     def dump(self):
-        print(self.log())
+        MLog.write().debug(self.log())

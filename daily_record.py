@@ -59,7 +59,7 @@ class SummaryRecord(object):
     def __del__(self):
         self.__daily_writer_hanle.close()
         self.__summary_writer_hanle.close()
-        print(self.dir)
+        MLog.write().info(self.dir)
 
     def set_chg_mean(self, chg_mean):
         self.__chg_mean = chg_mean
@@ -100,7 +100,7 @@ class SummaryRecord(object):
         self.df = self.df.append(df,ignore_index=True)
 
     def dump(self):
-        print('日对数收益:%f,日对数收益方差:%f,波动率:%f,夏普比率:%f,年化收益:%f,交易天数:%d,日胜率:%f,最终盈利:%f,最大回测:%f'
+        MLog.write().debug('日对数收益:%f,日对数收益方差:%f,波动率:%f,夏普比率:%f,年化收益:%f,交易天数:%d,日胜率:%f,最终盈利:%f,最大回测:%f'
               % (self.__chg_mean, self.__chg_std, self.__volatility, self.__sharp, self.__annualized_returns,
                  self.trade_count,
                  self.__daily_win_rate, self.final_value, self.__max_retr))
@@ -217,7 +217,7 @@ class DailyRecord(object):
         self._log_chg = math.log(1 - self._value_chg)
     
     def volume_log(self):
-        print('交易情况:')
+        MLog.write().debug('交易情况:')
         for v, value in self.__history_limit_volume.items():
             value.dump()
 
@@ -249,6 +249,6 @@ class DailyRecord(object):
                             index=['mktime'])
     
     def dump(self):
-        print(self.log())
+        MLog.write().debug(self.log())
         # self.volume_log()
-        print('\n\n')
+        MLog.write().debug('\n\n')

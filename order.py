@@ -81,7 +81,7 @@ class Order(object):
         elif self.__comb_offset_flag == CombOffset.close and self.__direction == Direction.sell_direction:
             str = '多头平仓'
 
-        print('[%s]--->Order:symbol:%s,order_id:%d,hold_vol_id:%d,amount:%d,status:%d,comb_offset_flag:%d,direction:%d,limit_price:%f,amount:%d,cost:%f,fee:%f,commission:%f,stamp:%f,transfer:%f,strategy_id:%d,create_time:%d,min_volume:%d,margin:%f'%(
+        MLog.write().debug('[%s]--->Order:symbol:%s,order_id:%d,hold_vol_id:%d,amount:%d,status:%d,comb_offset_flag:%d,direction:%d,limit_price:%f,amount:%d,cost:%f,fee:%f,commission:%f,stamp:%f,transfer:%f,strategy_id:%d,create_time:%d,min_volume:%d,margin:%f'%(
             str, self.__symbol, self.__order_id, self.__hold_volume_id, self.__amount, self.__status.value, self.__comb_offset_flag.value,
             self.__direction.value, self.__limit_price, self.__amount, self.cost(), self.fee(), self.__commission, self.__stamp, self.__transfer,
             self.__strategy_id,self.__create_time,self.__min_volume, self.__margin))

@@ -45,7 +45,7 @@ class MLog():
         """
         Constructor
         """
-        dir = './log/'
+        dir = './mlog/'
         if not os.path.exists(dir):
             os.makedirs(dir)
         filename = dir + name + '_' + datetime.datetime.now().strftime('%b_%d')+'.log'

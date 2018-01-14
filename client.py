@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import urllib2
+import icu
 import random
 import string
 
 
 class Client(object):
 
-    def __init__(self):
-        self.__host = 'xueqiu.com'
+    def __init__(self, host='xueqiu.com'):
+        self.__host = host
         self.__agent_list = ['Mozilla/5.0 (Windows NT 6.2; rv:16.0) Gecko/20100101 Firefox/16.0',
                              'Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0'
                              ]
@@ -60,6 +61,13 @@ class Client(object):
     
 
 if __name__ == "__main__":
-    client = Client()
+    client = Client('data.10jqka.com.cn')
     # print client.creat_cookie()
-    print client.request('https://xueqiu.com/stock/f10/bizunittrdinfo.json?date=20170927')
+    html = client.request('http://data.10jqka.com.cn/ifmarket/lhbyyb/type/1/tab/sbcs/field/sbcs/sort/desc/page/1/')
+    detector = icu.CharsetDetector()
+    detector.setText(html)
+    match = detector.detect()
+
+    print (match.getName())
+
+    print (html.decode(match.getName()))
