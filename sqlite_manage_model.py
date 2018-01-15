@@ -39,12 +39,16 @@ class SQLLiteStorage():
     def check_table(self, table_name):
         return self.engine.check_table(table_name)
 
+    def get_data(self, table):
+        return self.engine.fetch(table)
 
     def save_data(self,sql,data):
         self.wait_queue.append({'db': sql,
                                 'data': data})
         self.run()
 
+    def update_data(self, sql):
+        return self.engine.update(sql)
     def run(self):
         try:
             if len(self.wait_queue):

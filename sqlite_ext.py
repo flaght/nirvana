@@ -115,6 +115,15 @@ class SQLiteExt(object):
         else:
             mlog.log().error('the [{}] is empty or equal None!'.format(sql))
 
+    def update(self, sql):
+        count = 0
+        if sql is not None and sql != '':
+            cur = self.__get_cursor()
+            self.conn.execute(sql)
+            self.conn.commit()
+            count = self.conn.total_changes
+        return count
+
     def fetch(self,sql):
         queue = []
         if sql is not None and sql != '':
