@@ -5,9 +5,47 @@ from daily_price import DailyPrice
 from collections import OrderedDict
 
 '''
-龙虎榜数据
+龙虎榜,营业厅数据
 '''
 
+class Bize(object):
+    def __init__(self):
+        self.__xid = 0
+        self.__name = ''
+        self.__jianpin = ''
+        self.__identity = 0
+        self.__identity_name = ''
+
+
+    def set_xid(self, xid):
+        self.__xid = xid
+
+    def set_name(self, name):
+        self.__name = name
+
+    def set_jianpin(self, jianpin):
+        self.__jianpin = jianpin
+
+    def set_identity(self, identity):
+        self.__identity = identity
+
+    def set_identity_name(self, identity_name):
+        self.__identity_name = identity_name
+
+    def xid(self):
+        return self.__xid
+
+    def name(self):
+        return self.__name
+
+    def jianpin(self):
+        return self.__jianpin
+
+    def identity(self):
+        return self.__identity
+
+    def identity_name(self):
+        return self.__identity_name
 
 class LHBPair(object):
     def __init__(self):

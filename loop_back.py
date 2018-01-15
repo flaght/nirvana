@@ -199,6 +199,6 @@ if __name__ == '__main__':
     sys.setdefaultencoding('utf8')
     MLog.config(name='nirvana')
     lb = LookBack(20160104, 20180105)
-    lb.init_read_lhb('./output/')
+    lb.init_read_lhb('../../data/nirvana/xq/')
     lb.start()
     lb.calc_result()

@@ -212,7 +212,7 @@ class DailyRecord(object):
         self.__settle_available_cash = self.__last_available_cash + self.__close_profit - self.__fee # 开始之前可用资金 加上平仓收益 减去手续费
         self._value = self._interests / self._base_value # 累计净值
         self._daily_value = self._interests / (self._base_value + self._last_profit) # 当日净值
-        self._retracement = (self._profit - self._max_profit) / (self._max_profit + self._base_value) * 100
+        self._retracement = ((self._profit + self._last_profit) - self._max_profit) / (self._max_profit + self._base_value) * 100
         self._value_chg = (self._value - self.last_value) / self.last_value # 净值涨跌幅
         self._log_chg = math.log(1 - self._value_chg)
     

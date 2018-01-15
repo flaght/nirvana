@@ -6,7 +6,8 @@ from order import Order, CombOffset, OrderPrice, Direction, OrderStatus
 from account import Account
 from daily_record import DailyRecord, SummaryRecord
 from daily_price import DailyPrice
-from bize_lhb import BizeLHB, LHBPair
+from bize_lhb import BizeLHB, LHBPair, Bize
+from sqlite_manage_model import SQLLiteStorage
 from mlog import MLog
 
 DEFAULT_CASH = 100000
@@ -43,13 +44,32 @@ class Nirvana(object):
 
         self.long_volumes = OrderedDict()  # 持有多头仓
         self.short_volumes = OrderedDict()  # 持有空头仓
+        
+        self.bize_dict = OrderedDict() # 营业部，机构基本信息
         self.__init_lhb_chg()
+        self.__init_bize()
 
     def __reset(self):
         self.__limit_order.clear()
         self.history_limit_volumes.clear()
         self.__history_limit_order.clear()
 
+
+    def __init_bize(self):
+        db_engine = SQLLiteStorage('bize.db', 0)
+        result_list = db_engine.get_data('select xid,name,jianpin,identity,identity_name from bize')
+        for bize_rl in result_list:
+            bize = Bize()
+            bize.set_xid(bize_rl[0])
+            bize.set_name(bize_rl[1])
+            bize.set_jianpin(bize_rl[2])
+            if bize.xid() / 10 == 1999999:
+                bize.set_identity(100)
+            else:
+                bize.set_identity(bize_rl[3])
+            bize.set_identity_name(bize_rl[4])
+            self.bize_dict[bize.xid()] = bize
+ 
     def __init_lhb_chg(self):
         self.lhb[u'01'] = 1
         self.lhb[u'02'] = -1
@@ -307,7 +327,6 @@ class Nirvana(object):
         
         daily_fee = 0.0
         for vid,vvol in self.history_limit_volumes.items():
-            # MLog.write().debug vvol.dump()
             daily_fee += vvol.fee()
 
         self.account.set_position_profit(daily_profit)
@@ -355,16 +374,5 @@ class Nirvana(object):
             last_value = daily_record.value()
             last_available_cash = daily_record.last_available_cash() 
 
-        # chg_mean = np.mean(df['log_chg'])
-        # chg_std = np.std(df['log_chg'])
-
-        # summary_record.set_chg_mean(chg_mean)
-        # summary_record.set_chg_std(chg_std)
-        # summary_record.set_trade_count(df.shape[0])
-        # summary_record.set_final_value(df['value'].values[-1])
-        # summary_record.set_max_retr(np.min(df['retrace']))
-
-        # summary_record.calc_record(df[df['chg'] > 0.00].shape[0])
-        # summary_record.dump()
         summary_record.calc_record()
         summary_record.summary_record()
