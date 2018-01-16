@@ -28,6 +28,7 @@ class DailyPrice(object):
         self.__turnrate = 0.0  # 换手率
         self.__totmktcap = 0.0  # 总市值
         self.__negotiablemv = 0.0  # 流通市值
+        self.__list_date = 0 # 上市日期
 
     def df_parser(self, df):
         self.__symbol = df[1]
@@ -40,6 +41,7 @@ class DailyPrice(object):
         self.__avg_price = df[8]
         self.__vol = df[9]
         self.__amount = df[10]
+        self.__list_date = df [11]
 
     def xq_parser(self, ob):
         self.__trade_date = int(ob.get('tradedate'))
@@ -72,6 +74,10 @@ class DailyPrice(object):
 
     def set_symbol(self, symbol):
         self.__symbol = symbol
+
+
+    def list_date(self):
+        return self.__list_date
 
     def trade_date(self):
         return self.__trade_date

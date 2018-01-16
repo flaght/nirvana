@@ -65,11 +65,16 @@ class Nirvana(object):
             bize.set_jianpin(bize_rl[2])
             if bize.xid() / 10 == 1999999:
                 bize.set_identity(100)
+                bize.set_identity_name(u'机构专用')
             else:
                 bize.set_identity(bize_rl[3])
-            bize.set_identity_name(bize_rl[4])
+                bize.set_identity_name(bize_rl[4])
             self.bize_dict[bize.xid()] = bize
- 
+
+    def __get_bize(self, xid):
+        if self.bize_dict.has_key(xid):
+            return self.bize_dict[xid]
+        return None
     def __init_lhb_chg(self):
         self.lhb[u'01'] = 1
         self.lhb[u'02'] = -1
@@ -92,6 +97,9 @@ class Nirvana(object):
             bize_lhb = BizeLHB()
             bize_lhb.xq_parser(ob)
             bize_lhb.set_symbol(symbol)
+            bize = self.__get_bize(int(bize_lhb.bize_code()))
+            if bize is not None:
+                bize_lhb.set_bize(bize)
             # bize_lhb.dump()
             # 查看对应类型是否在
             if lhb_dict.has_key(bize_lhb.chg_type()):
@@ -143,20 +151,71 @@ class Nirvana(object):
         '''
         return True
 
+
+    def __lhb_identity_sale(self, bize_sale, date, symbol):
+        for k,bize_lhb in bize_sale.items():
+            if bize_lhb.bize().identity() == 100 or bize_lhb.bize().identity() == 1 or bize_lhb.bize().identity() == 1 or bize_lhb.bize().identity() == 3:
+                MLog.write().info('%d %s 卖方席位中有%s, 不能下单'%(date,symbol,  bize_lhb.bize().identity_name()))
+                return False
+        return True
+
+    # 买方席位中有重要身份，只要买方总量大于卖方总量则可以下单
+    def __lhb_identity_buy(self, lhb_pair, date, symbol):
+        is_identity = 0
+        latest_bize = None
+        for k, bize_lhb in lhb_pair.code_bize_buy().items():
+            if bize_lhb.bize().identity() == 100 or bize_lhb.bize().identity() == 1 or bize_lhb.bize().identity() == 2 or bize_lhb.bize().identity() == 3:
+                is_identity = 1
+                latest_bize = bize_lhb.bize()
+                break;
+        if is_identity == 0:
+            return False
+
+        # 含有重要席位,买方总额大于卖方总额
+        if lhb_pair.buy_amount() <= lhb_pair.sale_amount():
+            MLog.write().info('%d %s 卖方没有特殊席位，买方中有%s, 但买总额(%d)小于等于卖方总额(%d)不能下单'%(date, 
+                                symbol, latest_bize.identity_name(), lhb_pair.buy_amount(), lhb_pair.sale_amount()))
+            return False
+
+        MLog.write().info('%d %s 卖方没有特殊席位，买方中有%s, 买总额(%d)大于卖方总额(%d)，可以下单'%(
+            date, symbol, latest_bize.identity_name(), lhb_pair.buy_amount(), lhb_pair.sale_amount()))
+        return True
+
+    def __lhb_identity_strategy(self, lhb_pair):
+        symbol = lhb_pair.symbol()
+        date = lhb_pair.date()
+        if self.lhb[lhb_pair.chg_type()] == -1:  # 负面上榜不下单
+            MLog.write().debug('%d: %s 负面上榜不下单'%(date, symbol))
+            return False
+        # 检测卖方中是否含有机构，知名游资，一线游资,敢死队
+        if self.__lhb_identity_sale(lhb_pair.code_bize_sale(), date, symbol) == False:
+            return -1
+
+        buy_singal = self.__lhb_identity_buy(lhb_pair, date, symbol)
+
+        if buy_singal:
+            return 1
+
+        MLog.write().info('%d %s 买卖双方没有特殊席位' %(date, symbol))
+        return 0
+
     def __lhb_price_strategy(self, lhb_pair):
         daily_price = lhb_pair.daily_price()
         symbol = lhb_pair.symbol()
         date = lhb_pair.date()
         if self.lhb[lhb_pair.chg_type()] == -1:  # 负面上榜不下单
-            # MLog.write().debug('%d: %s 负面上榜不下单'%(date, symbol))
+            MLog.write().info('%d %s 负面上榜不下单'%(date, symbol))
             return False
 
         bize_buy_one = lhb_pair.bize_buy_from_pos(0)
         bize_buy_two = lhb_pair.bize_buy_from_pos(1)
         bize_sale_one = lhb_pair.bize_sale_from_pos(0)
 
+        # if self.__lhb_identity_strategy(self,lhb_pair) == -1:
+        #    return False
+
         if bize_sale_one is not None and bize_buy_two is None:  # 只有卖方
-            # MLog.write().debug('%d: %s 只有卖方'%(date, symbol))
+            MLog.write().info('%d: %s 只有卖方 不能下单 '%(date, symbol))
             return False
 
         if bize_sale_one is None and bize_buy_one is not None:  # 只有买方
@@ -164,19 +223,19 @@ class Nirvana(object):
             if r == False:
                 return False
             else:
-                # MLog.write().debug('%d: %s 单方博弈可以下单'%(date, symbol))
+                MLog.write().info('%d: %s 买方单方博弈可以下单'%(date, symbol))
                 return True
 
         # 存在买卖双方
         if lhb_pair.buy_amount() < lhb_pair.sale_amount():  # 卖方小于买方不下单
-            # MLog.write().debug('%d: %s 卖方总额大于买方总额'%(date, symbol))
+            MLog.write().info('%d: %s 卖方总额大于买方总额 不能下单'%(date, symbol))
             return False
 
         r = self.__lhb_buy_price(bize_buy_one, bize_buy_two, lhb_pair, date, symbol)
         if r == False:
             return False
         else:
-            # MLog.write().debug('%d: %s 双方博弈可以下单'%(date, symbol))
+            MLog.write().info('%d: %s 双方博弈可以下单'%(date, symbol))
             return True
 
     def order_close(self, symbol, stop_price, hold_volume_id, amount, create_time):
@@ -226,6 +285,13 @@ class Nirvana(object):
     def __strategy_commit(self, lhb_pair, date):
         daily_price = lhb_pair.daily_price()
         symbol = lhb_pair.symbol()
+        
+        # identity_signal = self.__lhb_identity_strategy(lhb_pair)
+        # if identity_signal == -1:
+        #    signal = False
+        # elif identity_signal == 1:
+        #    signal = True
+        # else:
         signal = self.__lhb_price_strategy(lhb_pair)
         return signal, symbol, daily_price
         # if signal:

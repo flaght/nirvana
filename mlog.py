@@ -48,7 +48,7 @@ class MLog():
         dir = './mlog/'
         if not os.path.exists(dir):
             os.makedirs(dir)
-        filename = dir + name + '_' + datetime.datetime.now().strftime('%b_%d')+'.log'
+        filename = dir + name + '_' + datetime.datetime.now().strftime('%b_%d_%H_%M')+'.log'
         # [Tue Nov 15 11:35:53 2016] [notice] Apache/2.2.15 (Unix) DAV/2 PHP/5.3.3 mod_ssl/2.2.15 OpenSSL/1.0.1e-fips configured -- resuming normal operations
         
         

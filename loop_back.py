@@ -14,7 +14,7 @@ from order import Direction, OrderStatus, CombOffset, OrderPrice
 from volume import Volume
 from nirvana import Nirvana
 import config
-
+import time
 class LookBack(object):
     __strategy_id = 1002
     __account_id = 10001
@@ -63,8 +63,18 @@ class LookBack(object):
             self.__strategy.on_lhb_event(json_ob, date)
             file_object.close()
 
+
+    def __is_new_shares(self, today, list_date):
+        min_time = 30 * 60 * 60 * 24
+        max_time = 345 * 60 * 60 * 24
+        diff_time = time.mktime(time.strptime(str(today),'%Y%m%d')) - time.mktime(time.strptime(str(list_date),'%Y%m%d'))
+
+        if min_time <=  diff_time <= max_time:
+            return True
+        return False
+
     def get_data_daily_price(self, symbols, date):
-        sql_daily_price = 'select S.ID, B.SYMBOL, S.TRADEDATE,S.LCLOSE,S.TOPEN, S.TCLOSE,S.THIGH,S.TLOW,S.AVGPRICE,S.VOL,S.AMOUNT from dnds.dbo.TQ_QT_SKDAILYPRICE AS S JOIN dnds.dbo.TQ_SK_BASICINFO as B on S.SECODE = B.SECODE and B.symbol IN(' + symbols + ') and S.TRADEDATE = ' + str(
+        sql_daily_price = 'select S.ID, B.SYMBOL, S.TRADEDATE,S.LCLOSE,S.TOPEN, S.TCLOSE,S.THIGH,S.TLOW,S.AVGPRICE,S.VOL,S.AMOUNT,B.LISTDATE from dnds.dbo.TQ_QT_SKDAILYPRICE AS S JOIN dnds.dbo.TQ_SK_BASICINFO as B on S.SECODE = B.SECODE and B.symbol IN(' + symbols + ') and S.TRADEDATE = ' + str(
             date)
         daily_price_list = {}
         df = pd.read_sql(sql_daily_price, self.__data_engine)
@@ -72,7 +82,9 @@ class LookBack(object):
             data = df.loc[indexs].values
             daily_price = DailyPrice()
             daily_price.df_parser(data)
-            daily_price_list[daily_price.symbol()] = daily_price
+            # 判断是不是次新股 30 - 345天
+            if self.__is_new_shares(date, daily_price.list_date()):
+                daily_price_list[daily_price.symbol()] = daily_price
         return daily_price_list
 
     # 根据委托单和持有单读取行情
@@ -198,7 +210,7 @@ if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
     MLog.config(name='nirvana')
-    lb = LookBack(20160104, 20180105)
+    lb = LookBack(20170104, 20180105)
     lb.init_read_lhb('../../data/nirvana/xq/')
     lb.start()
     lb.calc_result()

@@ -8,6 +8,14 @@ from collections import OrderedDict
 龙虎榜,营业厅数据
 '''
 
+'''
+1, 一线游资，
+2，知名游资
+3，敢死队
+4，跟风高手
+5, 毒瘤
+6，新股专家
+'''
 class Bize(object):
     def __init__(self):
         self.__xid = 0
@@ -50,10 +58,10 @@ class Bize(object):
 class LHBPair(object):
     def __init__(self):
         self.__daily_price = DailyPrice()
-        self.code_bize_buy = OrderedDict()  # 买方席位 key为id
-        self.seq_bize_buy = OrderedDict()  # key 为顺序
-        self.code_bize_sale = OrderedDict()
-        self.seq_bize_sale = OrderedDict()
+        self.__code_bize_buy = OrderedDict()  # 买方席位 key为id
+        self.__seq_bize_buy = OrderedDict()  # key 为顺序
+        self.__code_bize_sale = OrderedDict()
+        self.__seq_bize_sale = OrderedDict()
         self.__buy_amount = 0
         self.__sale_amount = 0
         self.__chg_type = ''
@@ -69,6 +77,19 @@ class LHBPair(object):
 
     def chg_type(self):
         return self.__chg_type
+
+
+    def code_bize_buy(self):
+        return self.__code_bize_buy
+
+    def seq_bize_buy(self):
+        return self.__seq_bize_buy
+
+    def code_bize_sale(self):
+        return self.__code_bize_sale
+
+    def seq_bize_sale(self):
+        return self.__seq_bize_sale
 
     def set_date(self, date):
         self.__date = date
@@ -93,37 +114,37 @@ class LHBPair(object):
         return self.__sale_amount
 
     def bize_sale_from_pos(self, index):
-        if self.seq_bize_sale.has_key(index):
-            return self.seq_bize_sale[index]
+        if self.__seq_bize_sale.has_key(index):
+            return self.__seq_bize_sale[index]
         else:
             return None
 
     def bize_sale_from_code(self, code_id):
-        if self.code_bize_sale.has_key(code_id):
-            return self.code_bize_sale[code_id]
+        if self.__code_bize_sale.has_key(code_id):
+            return self.__code_bize_sale[code_id]
         else:
             return None
 
     def bize_buy_from_pos(self, index):
-        if self.seq_bize_buy.has_key(index):
-            return self.seq_bize_buy[index]
+        if self.__seq_bize_buy.has_key(index):
+            return self.__seq_bize_buy[index]
         else:
             return None
 
     def bize_buy_from_code(self, code_id):
-        if self.code_bize_buy.has_key(code_id):
-            return self.code_bize_buy[code_id]
+        if self.__code_bize_buy.has_key(code_id):
+            return self.__code_bize_buy[code_id]
         else:
             return None
 
     def set_bize_buy(self, bize_buy):
-        self.code_bize_buy[bize_buy.bize_code()] = bize_buy
-        self.seq_bize_buy[len(self.seq_bize_buy)] = bize_buy
+        self.__code_bize_buy[bize_buy.bize_code()] = bize_buy
+        self.__seq_bize_buy[len(self.__seq_bize_buy)] = bize_buy
         self.__buy_amount += bize_buy.amount()
 
     def set_bize_sale(self, bize_sale):
-        self.code_bize_sale[bize_sale.bize_code()] = bize_sale
-        self.seq_bize_sale[len(self.seq_bize_sale)] = bize_sale
+        self.__code_bize_sale[bize_sale.bize_code()] = bize_sale
+        self.__seq_bize_sale[len(self.__seq_bize_sale)] = bize_sale
         self.__sale_amount += bize_sale.amount()
 
 
@@ -140,6 +161,8 @@ class BizeLHB(object):
         self.__sale_vol = 0.0  # 卖出量
         self.__sale_amount = 0.0  # 卖出额
         self.__desc = ''  # 上榜原因
+
+        self.__bize = Bize() # 营业部信息
 
     def xq_parser(self, ob):
         self.__trade_date = int(ob.get('tradedate'))
@@ -166,8 +189,19 @@ class BizeLHB(object):
             self.__buy_vol, self.__buy_amount, self.__sale_vol,
             self.__sale_amount, self.__desc))
 
+    def set_bize(self, bize):
+        self.__bize.set_xid(bize.xid())
+        self.__bize.set_name(bize.name())
+        self.__bize.set_jianpin(bize.jianpin())
+        self.__bize.set_identity(bize.identity())
+        self.__bize.set_identity_name(bize.identity_name())
+
     def set_symbol(self, symbol):
         self.__symbol = symbol
+
+
+    def bize(self):
+        return self.__bize
 
     def trade_date(self):
         return self.__trade_date
