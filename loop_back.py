@@ -83,8 +83,8 @@ class LookBack(object):
             daily_price = DailyPrice()
             daily_price.df_parser(data)
             # 判断是不是次新股 30 - 345天
-            if self.__is_new_shares(date, daily_price.list_date()):
-                daily_price_list[daily_price.symbol()] = daily_price
+            # if self.__is_new_shares(date, daily_price.list_date()):
+            daily_price_list[daily_price.symbol()] = daily_price
         return daily_price_list
 
     # 根据委托单和持有单读取行情
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
     MLog.config(name='nirvana')
-    lb = LookBack(20170104, 20180105)
+    lb = LookBack(20160104, 20180105)
     lb.init_read_lhb('../../data/nirvana/xq/')
     lb.start()
     lb.calc_result()

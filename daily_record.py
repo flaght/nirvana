@@ -231,7 +231,7 @@ class DailyRecord(object):
 
     def to_csv(self):
         dict = {'mktime':self.__mktime, 'interests':round(self._interests,2), 'profit':round(self._profit,2), 'value':round(self._value,2),
-                'daily_value':round(self._daily_value,2), 'all_profit':round(self.all_profit(),2), 
+                'daily_value':round(self._daily_value,2), 'all_profit':round(self._last_profit + self.all_profit(),2), 
                 'close_profit':round(self.__close_profit,2),'prosition_profit':round(self.__position_profit,2),
                 'settle_available_cash':round(self.__settle_available_cash,2),
                 'position_cost':round(self.__position_cost,2), 'fee':round(self.__fee,2), 
