@@ -24,8 +24,8 @@ class SummaryRecord(object):
         self.__annualized_returns = 0.0  # 年化收益
         self.trade_count = 0  # 交易天数
         self.__daily_win_rate = 0.0  # 日胜率
-        # self.__volume_count = 0  # 订单总数
-        # self.__volume_win_rate = 0  # 订单胜率
+        self.__volume_count = 0  # 订单总数
+        self.__volume_win_rate = 0  # 订单胜率
         self.final_value = 0.0  # 最终盈利
         self.__max_retr = 0.0  # 最大回撤
 
@@ -40,6 +40,19 @@ class SummaryRecord(object):
         self.dir = dir
         if not os.path.exists(dir):
             os.makedirs(dir)
+            
+        
+        self.__sub_dir ={}
+        self.__sub_dir['vol'] = self.dir + '/volume/'
+        self.__sub_dir['order'] = self.dir + '/order/'
+        self.__sub_dir['position'] = self.dir + '/position/'
+        self.__sub_dir['close'] = self.dir + '/close/'
+
+
+        for k, value in self.__sub_dir.items():
+            if not os.path.exists(str(value)):
+                os.makedirs(str(value))
+
         daily_filename = dir + '/' + 'summary_daily_record' + '.csv'
         summary_filename = dir + '/' + 'summary_record' + '.csv' 
         self.__sumary_df_filename = dir + '/' + 'result' + '.csv'
@@ -95,9 +108,41 @@ class SummaryRecord(object):
         self.__annualized_returns = (self.final_value - 1) / self.trade_count * TDAYS_PER_YEAR * 100
         self.__daily_win_rate =  (self.df[self.df['chg'] > 0.00].shape[0]) * 100 / self.trade_count
 
+
+    def __record_file(self, date, filename, v_fieldnames, vol_list):
+        with open(filename, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=v_fieldnames)
+            writer.writeheader()
+            for volume in vol_list:
+                writer.writerow(volume)
+
+    def record_volume(self, date, volume_list, position_list):
+        volume_fieldnames = ['symbol','trader_id','order_id','direction','price','comb_offset','cost','fee','commission','stamp','transfer','daily_profit','settle_price','amount','min_volume','create_time']
+
+        vol_filename = str(self.__sub_dir['vol']) + str(date) + '_vol.csv'
+        position_filename = str(self.__sub_dir['position']) + str(date) + '_position.csv'
+        self.__record_file(date, vol_filename, volume_fieldnames, volume_list)
+        self.__record_file(date, position_filename, volume_fieldnames, position_list)
+
+
+    def record_order(self, date, order_list):
+        if order_list == None:
+            return
+
+        order_fieldnames =['symbol','order_id','comb_offset','direction','order_type','price','fee','commission','stamp','transfer','cost','hold_vol_id','status','amount','create_time','min_volume']
+
+        filename = str(self.__sub_dir['order']) + str(date) + '_order.csv'
+        with open(filename, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames = order_fieldnames)
+            writer.writeheader()
+            for order in order_list:
+                writer.writerow(order)
+    
+    
     def record_daily(self,dict, df):
         self.__daily_writer.writerow(dict)
         self.df = self.df.append(df,ignore_index=True)
+
 
     def dump(self):
         MLog.write().debug('日对数收益:%f,日对数收益方差:%f,波动率:%f,夏普比率:%f,年化收益:%f,交易天数:%d,日胜率:%f,最终盈利:%f,最大回测:%f'
@@ -112,6 +157,12 @@ class SummaryRecord(object):
                                         'max_retr':round(self.__max_retr,2)})
 
         self.df.to_csv(self.__sumary_df_filename, encoding='utf-8')
+
+
+
+
+
+
 
 class DailyRecord(object):
     def __init__(self):
@@ -138,6 +189,7 @@ class DailyRecord(object):
         self.__last_available_cash = 0.0 # 今天初始资金
         self.__history_limit_volume = OrderedDict()  # 交易记录
         self.__history_limit_order = OrderedDict()  # 委托订单
+        self.__history_long_volume = OrderedDict() # 持仓记录
 
     def mktime(self):
         return self.__mktime
@@ -156,6 +208,9 @@ class DailyRecord(object):
 
     def set_fee(self, fee):
         self.__fee = fee
+
+    def set_long_volume(self, long_volume):
+        self.__history_long_volume = copy.deepcopy(long_volume)
 
     def set_limit_volume(self, limit_volume):
         self.__history_limit_volume = copy.deepcopy(limit_volume)
@@ -214,12 +269,29 @@ class DailyRecord(object):
         self._daily_value = self._interests / (self._base_value + self._last_profit) # 当日净值
         self._retracement = ((self._profit + self._last_profit) - self._max_profit) / (self._max_profit + self._base_value) * 100
         self._value_chg = (self._value - self.last_value) / self.last_value # 净值涨跌幅
-        self._log_chg = math.log(1 - self._value_chg)
-    
-    def volume_log(self):
-        MLog.write().debug('交易情况:')
+        self._log_chg = math.log(1 + self._value_chg)
+
+
+    def position_tocsv(self):
+        to_csv_list = []
+        for v, value in self.__history_long_volume.items():
+            to_csv_list.append(value.to_csv())
+        return to_csv_list
+
+    def volume_tocsv(self):
+        # MLog.write().debug('交易情况:')
+        to_csv_list = []
         for v, value in self.__history_limit_volume.items():
             value.dump()
+            to_csv_list.append(value.to_csv())
+        return to_csv_list
+    
+    def order_tocsv(self):
+        to_csv_list = []
+        for o, value in self.__history_limit_order.items():
+            value.dump()
+            to_csv_list.append(value.to_csv())
+        return to_csv_list
 
     def log(self):
         return ('交易日:%d,今日权益:%f,今日盈亏:%f,平仓盈亏:%f,持仓盈亏:%f,持仓成本:%f,手续费:%f,昨日累计盈亏:%f,最大盈亏:%f,今日净值:%f,最大回撤:%f,今日初始资金:%f,今日结算后资金:%f,涨跌幅:%f,对数收益:%f'
@@ -242,7 +314,7 @@ class DailyRecord(object):
     
     def to_dataframe(self):
         return pd.DataFrame({'mktime':self.__mktime, 'interests':round(self.interests(),2),
-                             'value':round(self.value(),2),'profit':round(self.all_profit(),2),
+                             'value':round(self.value(),4),'profit':round(self._last_profit + self.all_profit(), 2),
                              'available_cash':round(self.__settle_available_cash,2),
                              'retrace':round(self.retrace(),4),'chg':round(self.chg(),4),
                              'log_chg':round(self.log_chg(),4)},

@@ -18,10 +18,10 @@ class Client(object):
         pass
 
     def creat_cookie(self):
-        cookie = 'xq_a_token=95b69ccb71a54ebf3d7060a84a72b45015fead7f; '\
-                + 'xq_a_token.sig=r7RhUAkpd9FiBmPDlOV3F-V8LFo; '\
-                + 'xq_r_token=6589f21e3e52d21c4d3de00d3135b3920fa8a52f; '\
-                + 'xq_r_token.sig=Ho5fiQYDNIITpBXlltLZVADXRSI;'\
+        cookie = 'xq_a_token=9fe68a74102e36c95d83680e70152894648189b5; '\
+                + 'xq_a_token.sig=Wp2RDfA0m2SS1--eP6TyzeJrNqE;  '\
+                + 'xq_r_token=31f446a0ba3f00cf0ec805ef008a3ad7d7ef5f6e; '\
+                + 'xq_r_token.sig=-MGYDh3MlR7dkoz1vYeWUVTTyoQ;'\
 
         u = string.join(random.sample({'0', '1', '2', '3', '4', '5', \
                                        '6', '7', '8', '9', '0', '1', \

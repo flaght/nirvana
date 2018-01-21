@@ -70,6 +70,15 @@ class Order(object):
         self.__status = OrderStatus.not_traded #初始化为未知
         self.__hold_volume_id = 0 # 下平仓单时候记录持仓的ID，用于平仓盈亏计算
 
+    def to_csv(self):
+        dict = {'symbol':self.__symbol, 'order_id':self.__order_id, 'comb_offset': self.__comb_offset_flag.value,
+                'direction':self.__direction.value, 'order_type':self.__order_price_type.value, 'price':round(self.__limit_price,2),
+                'fee':round(self.fee(),2),'commission':round(self.__commission,2),'stamp':round(self.__stamp,2),'transfer':round(self.__transfer,2),
+                'cost':round(self.cost(),2),'hold_vol_id':self.__hold_volume_id,'status':self.__status.value,
+                'amount':self.__amount,'create_time':self.__create_time,
+                'min_volume':self.__min_volume}
+        return dict
+
     def dump(self):
         str = '异常单'
         if self.__comb_offset_flag == CombOffset.open and self.__direction == Direction.buy_direction:

@@ -40,7 +40,7 @@ class Nirvana(object):
 
         self.account = Account()
         self.account.set_account_id(self.__account_id)
-        self.account.set_init_cash(DEFAULT_CASH)
+        self.account.set_init_cash(400000)
 
         self.long_volumes = OrderedDict()  # 持有多头仓
         self.short_volumes = OrderedDict()  # 持有空头仓
@@ -286,13 +286,13 @@ class Nirvana(object):
         daily_price = lhb_pair.daily_price()
         symbol = lhb_pair.symbol()
         
-        # identity_signal = self.__lhb_identity_strategy(lhb_pair)
-        # if identity_signal == -1:
-        #    signal = False
-        # elif identity_signal == 1:
-        #    signal = True
-        # else:
-        signal = self.__lhb_price_strategy(lhb_pair)
+        identity_signal = self.__lhb_identity_strategy(lhb_pair)
+        if identity_signal == -1:
+            signal = False
+        elif identity_signal == 1:
+            signal = True
+        else:
+            signal = self.__lhb_price_strategy(lhb_pair)
         return signal, symbol, daily_price
         # if signal:
         #    self.order_open(symbol, daily_price.avg_price(), 1, date)
@@ -305,6 +305,10 @@ class Nirvana(object):
         self.order_open(symbol, daily_price.avg_price(), 1, date)
 
     def __position_trade(self, date, daily_price, position):
+        
+        if date <= position.create_time(): #防止當天購買又當天賣出情況
+            return
+
         sl_price = position.limit_price() * (1 - self.__sl)  # 止损价
         tp_price = position.limit_price() * (1 + self.__tp)  # 止盈价
 
@@ -353,7 +357,7 @@ class Nirvana(object):
             if self.long_volumes.has_key(order.hold_volume_id()):
                 v = self.long_volumes[order.hold_volume_id()]
                 profit = self.account.close_cash(v, vol, order.fee())
-                MLog.write().debug('%s 平仓盈利:%f'%(vol.symbol(), profit)) 
+                MLog.write().debug('%s 平仓盈利:%f'%(vol.symbol(), profit))
                 del self.long_volumes[order.hold_volume_id()]
 
     def on_lhb_event(self, ob, date):
@@ -402,6 +406,7 @@ class Nirvana(object):
         record.set_position_profit(self.account.position_profit()) # 当日持仓盈亏
         record.set_limit_volume(self.history_limit_volumes) # 当日交易记录
         record.set_limit_order(self.__history_limit_order) # 当日下单记录 
+        record.set_long_volume(self.long_volumes) # 当日持仓记录
         record.set_fee(daily_fee) # 当日手续费消耗
         record.set_mktime(date)
 
@@ -432,6 +437,10 @@ class Nirvana(object):
             daily_record.set_last_available_cash(last_available_cash)
             daily_record.calc_result()
             daily_record.dump()
+            summary_record.record_volume(daily_record.mktime(), daily_record.volume_tocsv(),
+                                        daily_record.position_tocsv())
+            summary_record.record_order(daily_record.mktime(), daily_record.order_tocsv())
+
             summary_record.record_daily(daily_record.to_csv(),daily_record.to_dataframe())
 
             total_profit += daily_record.all_profit()

@@ -77,5 +77,6 @@ if __name__ == "__main__":
     db_engine = GetDataEngine('DNDS')
     # df = pd.read_sql('SELECT * from dnds.dbo.TQ_QT_SKDAILYPRICE where SECODE = 2010000565 and TRADEDATE = 19901220', db_engine)
     
-    df = pd.read_sql('select S.ID, B.SYMBOL, S.TRADEDATE,S.LCLOSE,S.TOPEN, S.TCLOSE,S.THIGH,S.TLOW,S.AVGPRICE from dnds.dbo.TQ_QT_SKDAILYPRICE AS S JOIN dnds.dbo.TQ_SK_BASICINFO as B on S.SECODE = B.SECODE and B.symbol IN(\'000799\',\'601398\') and S.TRADEDATE = 20171220', db_engine)
-    print (df)
+    # df = pd.read_sql('select TRADEDATE, LCLOSE, TOPEN, TCLOSE, THIGH, TLOW, VOL, AMOUNT, CHANGE, PCHG, TOTMKTCAP, NEGOTIABLEMV from dnds.dbo.TQ_QT_INDEX where TRADEDATE > 20160104 AND TRADEDATE < 20180106 and SECODE = \'2070000060\'', db_engine)
+    df = pd.read_sql('select TRADEDATE,LCLOSE,TOPEN,TCLOSE,THIGH,TLOW,VOL,AMOUNT,CHANGE,PCHG,TOTMKTCAP,NEGOTIABLEMV from dnds.dbo.TQ_QT_INDEX where SECODE = \'2070000060\' AND TRADEDATE >20160104 AND TRADEDATE < 20180106 ORDER BY TRADEDATE ASC',db_engine)
+    df.to_csv('000300_160104_180106.csv',encoding='utf-8')

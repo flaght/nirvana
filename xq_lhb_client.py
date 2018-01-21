@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import tushare as ts
 from client import Client
+from mlog import MLog
 import json
 import os
 
@@ -24,7 +25,8 @@ class XQLHBClient(object):
 
     def __crawler_lhb_detail(self, symbol, trade_date):
         url = self.__base_detail + '?symbol=' + symbol + '&date=' + str(trade_date)
-        print (url)
+        # print (url)
+        MLog.write().info('%s' %(url))
         lhb_detail_obj = json.loads(self.__client.request(url))
         if lhb_detail_obj is None:
             return
@@ -32,7 +34,7 @@ class XQLHBClient(object):
         if lhb_detail is None:
             return
 
-        sub_path = './output/' + str(trade_date) + '/'
+        sub_path = '../../data/nirvana/output/' + str(trade_date) + '/'
         filename = sub_path + symbol + '.json'
         
         if not os.path.exists(sub_path):
@@ -57,5 +59,6 @@ class XQLHBClient(object):
             self.__crawler_lhb_list(td)
 
 if __name__ == "__main__":
-    client = XQLHBClient(20171016,20180102)
+    MLog.config(name='xq_cralwer')
+    client = XQLHBClient(20070704,20091231)
     client.crawler_lhb()

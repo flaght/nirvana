@@ -35,7 +35,38 @@ class LookBack(object):
 
         self.__strategy = Nirvana(self.__working_limit_order)
 
+        self.st_stock = OrderedDict()
+        
         self.__data_engine = GetDataEngine('DNDS')
+
+
+    def __set_st_stock(self, date, symbol, name):
+        re_date = int(date.replace('-',''))
+        if self.st_stock.has_key(re_date):
+            stock_dict = self.st_stock[re_date]
+        else:
+            stock_dict = OrderedDict()
+
+        stock_dict[symbol] = name
+
+        self.st_stock[re_date] = stock_dict
+
+    def init_st_stock(self,filename):
+        st_stock = pd.read_csv(filename)
+
+        for indexs in st_stock.index:
+            df_data = st_stock.loc[indexs].values
+            date = df_data[1]
+            symbol = str(df_data[2].split('.')[0])
+            name = str(df_data[5])
+            self.__set_st_stock(date, symbol, name)
+
+    def is_st_stock(self, date, symbol):
+        if self.st_stock.has_key(date):
+            stock_dict = self.st_stock[date]
+            if stock_dict.has_key(symbol):
+                return True
+        return False
 
     def init_read_lhb(self, dir):
         for path, dirs, fs, in os.walk(dir):
@@ -53,7 +84,8 @@ class LookBack(object):
         trade_date = ts.trade_cal()
         for indexs in trade_date.index:
             date_u = int(trade_date.loc[indexs].values[0].replace('-', ''))
-            if start_date <= date_u <= end_date:
+            f_u = int(trade_date.loc[indexs].values[1])
+            if (start_date <= date_u <= end_date) and (f_u == 1):
                 self.__trade_date.append(date_u)
 
     def __loop_back(self, date, lhb_set):
@@ -91,6 +123,11 @@ class LookBack(object):
     def on_get_daily_price(self, date):
         symbols = ''
         for v, value in self.__working_limit_order.items():
+            # 检测是否是st 股票
+            if self.is_st_stock(date, value.symbol()[2:]):
+                MLog.write().info('symbol:%s is ST STOCK on %d'%(str(value.symbol()[2:]),date))
+                continue
+
             symbols += '\''
             symbols += value.symbol()[2:]
             symbols += '\''
@@ -115,6 +152,7 @@ class LookBack(object):
                 # 行情不存在
                 if not daily_price_list.has_key(order.symbol()[2:]):
                     continue
+
                 daily_price = daily_price_list[order.symbol()[2:]]
                 # 停盘
                 is_used = daily_price.is_use
@@ -136,6 +174,9 @@ class LookBack(object):
                     continue
 
                 if not daily_price.is_use:  # 停牌或涨跌停
+                    continue
+
+                if self.is_st_stock(date, order.symbol()): # ST股票不参与交易
                     continue
 
                 if order_id in self.__working_limit_order:
@@ -186,12 +227,13 @@ class LookBack(object):
             daily_price_list = self.on_get_daily_price(date)
            
             if daily_price_list is not None and len(daily_price_list) > 0:
-                # 送给策略，对持仓做操作
+                # 送给策略，对持仓做操作,A股市场T+1，可当天卖当天买，不能当天买再当天卖
                 MLog.write().debug('push daily_price strategy========>')
                 self.__strategy.on_market_data(date, daily_price_list)
                 # 读取行情，撮合价格成交
                 MLog.write().debug('cross_limit_order ========>')
                 self.cross_limit_order(date, daily_price_list)
+                # self.__working_limit_order.clear()
                 # 当天结算
                 MLog.write().debug('today calc settle=========>')
                 self.__strategy.calc_settle(date, daily_price_list)
@@ -211,6 +253,7 @@ if __name__ == '__main__':
     sys.setdefaultencoding('utf8')
     MLog.config(name='nirvana')
     lb = LookBack(20160104, 20180105)
+    lb.init_st_stock('./market_st_data.csv')
     lb.init_read_lhb('../../data/nirvana/xq/')
     lb.start()
     lb.calc_result()

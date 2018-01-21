@@ -39,10 +39,18 @@ class Volume(object):
         self.__daily_profit  = 0.0 # 日持仓盈亏
         self.__daily_settle_price = 0.0 #当日结算价
         self.__profit = 0.0 # 累积盈利
+        
         self.__profit_dict = OrderedDict() # 日持仓盈亏列表
-
         self.__order_list = [] # 订单列表
 
+    def to_csv(self):
+        dict = {'symbol':self.__symbol, 'trader_id':self.__trader_id, 'order_id':self.__order_id,
+                'direction':self.__direction.value, 'price':round(self.__limit_price,2), 'comb_offset':self.__comb_offset_flag.value,
+                'cost':round(self.cost(),2),'fee':round(self.fee(),2),'commission':round(self.__commission,2),'stamp':round(self.__stamp,2),
+                'transfer':round(self.__transfer,2),'daily_profit':round(self.__daily_profit,2),'settle_price':round(self.__daily_settle_price,2),
+                'amount':self.__amount,'min_volume':self.__min_volume,'create_time':self.__create_time}
+        
+        return dict
 
     def dump(self):
         str = '异常单'
@@ -88,7 +96,10 @@ class Volume(object):
         global GLOBAL_VOLUME_ID
         GLOBAL_VOLUME_ID += 1
         self.__trader_id = GLOBAL_VOLUME_ID
-        self.__create_time = second_time
+        # self.__create_time = second_time
+
+    def create_time(self):
+        return self.__create_time
 
     def cost(self):
         return self.__limit_price * self.__amount * self.__min_volume
