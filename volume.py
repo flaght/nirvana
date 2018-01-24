@@ -63,7 +63,7 @@ class Volume(object):
         elif self.__comb_offset_flag == CombOffset.close and self.__direction == Direction.sell_direction:
             str = '多头平仓'
 
-        MLog.write().debug('[%s]--->%s Volume:订单ID:%d, 委托单ID:%d, 方向:%d, 成交价:%f, 成本(不含手续费):%f, 佣金:%f, 转让费:%f, 印花税:%f, 手续费:%f, 当日盈亏:%f, 累计盈亏:%f,今日结算价:%f 订单类型:%d, 手数:%d, 成交时间:%d, strategy_id:%d, 最小成交单位量:%d'%(
+        MLog.write().info('[%s]--->%s Volume:订单ID:%d, 委托单ID:%d, 方向:%d, 成交价:%f, 成本(不含手续费):%f, 佣金:%f, 转让费:%f, 印花税:%f, 手续费:%f, 当日盈亏:%f, 累计盈亏:%f,今日结算价:%f 订单类型:%d, 手数:%d, 成交时间:%d, strategy_id:%d, 最小成交单位量:%d'%(
             str, self.__symbol, self.__trader_id, self.__order_id, self.__direction.value, self.__limit_price, self.cost(), self.__commission, self.__transfer, self.__stamp,
             self.fee(), self.__daily_profit, self.__profit, self.__daily_settle_price, self.__comb_offset_flag.value,self.__amount,self.__create_time,
             self.__strategy_id,self.__min_volume))

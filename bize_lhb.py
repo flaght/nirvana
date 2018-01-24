@@ -238,3 +238,42 @@ class BizeLHB(object):
 
     def desc(self):
         return self.__desc
+
+class LHBChg(object):
+
+    def __init__(self):
+        self.__xid = 0
+        self.__chg_type = u''
+        self.__name = ''
+        self.__direction = 0
+        self.__chg_desc = ''
+
+    def set_xid(self,xid):
+        self.__xid = xid
+
+    def set_chg_type(self, chg_type):
+        self.__chg_type = chg_type
+
+    def set_name(self, name):
+        self.__name = name
+
+    def set_direction(self, direction):
+        self.__direction = direction
+
+    def set_chg_desc(self, chg_desc):
+        self.__chg_desc = chg_desc
+
+    def xid(self):
+        return self.__xid
+
+    def chg_type(self):
+        return self.__chg_type
+
+    def name(self):
+        return self.__name
+
+    def direction(self):
+        return self.__direction
+
+    def chg_desc(self):
+        return self.__chg_desc

@@ -93,5 +93,5 @@ class DataSets(object):
 
 if __name__ == '__main__':
     data_set = DataSets()
-    data_set.calc_bizs_from('./output/')
+    data_set.calc_bizs_from('../../data/nirvana/xq/')
 

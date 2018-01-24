@@ -50,7 +50,8 @@ class LookBack(object):
         stock_dict[symbol] = name
 
         self.st_stock[re_date] = stock_dict
-
+        # MLog.write().info("st_stock:%d, date:%d, symbol:%s, name:%s, stock_dict:%d"%(len(self.st_stock), re_date, symbol, name, len(stock_dict)))
+    
     def init_st_stock(self,filename):
         st_stock = pd.read_csv(filename)
 
@@ -100,7 +101,8 @@ class LookBack(object):
         min_time = 30 * 60 * 60 * 24
         max_time = 345 * 60 * 60 * 24
         diff_time = time.mktime(time.strptime(str(today),'%Y%m%d')) - time.mktime(time.strptime(str(list_date),'%Y%m%d'))
-
+        if diff_time > min_time:
+            return True
         if min_time <=  diff_time <= max_time:
             return True
         return False
@@ -114,8 +116,7 @@ class LookBack(object):
             data = df.loc[indexs].values
             daily_price = DailyPrice()
             daily_price.df_parser(data)
-            # 判断是不是次新股 30 - 345天
-            # if self.__is_new_shares(date, daily_price.list_date()):
+            #if self.__is_new_shares(date, daily_price.list_date()):
             daily_price_list[daily_price.symbol()] = daily_price
         return daily_price_list
 
@@ -124,9 +125,9 @@ class LookBack(object):
         symbols = ''
         for v, value in self.__working_limit_order.items():
             # 检测是否是st 股票
-            if self.is_st_stock(date, value.symbol()[2:]):
-                MLog.write().info('symbol:%s is ST STOCK on %d'%(str(value.symbol()[2:]),date))
-                continue
+            #if self.is_st_stock(date, value.symbol()[2:]):
+            #    MLog.write().debug('symbol:%s is ST STOCK on %d'%(str(value.symbol()[2:]),date))
+            #    continue
 
             symbols += '\''
             symbols += value.symbol()[2:]
@@ -221,7 +222,7 @@ class LookBack(object):
 
     def start(self):
         for date in self.__trade_date:
-            MLog.write().debug('trader starting date：%d========>' % (date))
+            MLog.write().info('trader starting date：%d========>' % (date))
             # 根据委托单和持有单读取行情
             MLog.write().debug('get %d daily_price========>' %(date))
             daily_price_list = self.on_get_daily_price(date)
@@ -252,8 +253,8 @@ if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
     MLog.config(name='nirvana')
-    lb = LookBack(20160104, 20180105)
-    lb.init_st_stock('./market_st_data.csv')
+    lb = LookBack(20160101, 20180105)
+    # lb.init_st_stock('./market_st.csv')
     lb.init_read_lhb('../../data/nirvana/xq/')
     lb.start()
     lb.calc_result()

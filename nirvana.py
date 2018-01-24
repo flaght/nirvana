@@ -6,7 +6,7 @@ from order import Order, CombOffset, OrderPrice, Direction, OrderStatus
 from account import Account
 from daily_record import DailyRecord, SummaryRecord
 from daily_price import DailyPrice
-from bize_lhb import BizeLHB, LHBPair, Bize
+from bize_lhb import BizeLHB, LHBPair, Bize, LHBChg
 from sqlite_manage_model import SQLLiteStorage
 from mlog import MLog
 
@@ -75,22 +75,49 @@ class Nirvana(object):
         if self.bize_dict.has_key(xid):
             return self.bize_dict[xid]
         return None
+
+
     def __init_lhb_chg(self):
-        self.lhb[u'01'] = 1
-        self.lhb[u'02'] = -1
-        self.lhb[u'03'] = 0
-        self.lhb[u'04'] = 0
-        self.lhb[u'05'] = 1
-        self.lhb[u'06'] = -1
-        self.lhb[u'07'] = 1
-        self.lhb[u'08'] = -1
-        self.lhb[u'09'] = 0
-        self.lhb[u'11'] = 0
-        self.lhb[u'24'] = 1
-        self.lhb[u'25'] = -1
-        self.lhb[u'28'] = 1
-        self.lhb[u'29'] = -1
-        self.lhb[u'33'] = -1
+        db_engine = SQLLiteStorage('bize.db', 0)
+        result_list = db_engine.get_data('select xid,chg_type,direction,name,chg_desc from class')
+        for cls_rl in result_list:
+            lhb_chg = LHBChg()
+            lhb_chg.set_xid(cls_rl[0])
+            lhb_chg.set_chg_type(cls_rl[1])
+            lhb_chg.set_direction(cls_rl[2])
+            lhb_chg.set_name(cls_rl[3])
+            lhb_chg.set_chg_desc(cls_rl[4])
+            self.lhb[lhb_chg.chg_type()] = lhb_chg
+
+        '''
+        self.lhb[u'01'] = 1  # 涨幅偏离值达7%的证券
+        self.lhb[u'02'] = -1 # 跌幅偏离值达7%的证券
+        self.lhb[u'03'] = 0  # 振幅值达15%的证券
+        self.lhb[u'04'] = 0  # 换手率达20%的证券
+        self.lhb[u'05'] = 1  # 连续三个交易日内，非ST,*ST,S证券异常期间收盘价 涨幅偏离值累计达20%的证券
+        self.lhb[u'06'] = -1 # 连续三个交易日内，非ST,*ST,S证券异常期间收盘价跌幅偏离值累计达20%的证券
+        self.lhb[u'07'] = -1  # 连续三个交易日内，涨幅偏离值累计达到15%的ST证券、*ST证券和未完成股改证券   特殊处理 ST, *ST不放入计算中
+        self.lhb[u'08'] = -1 # 连续三个交易日内，跌幅偏离值累计达到15%的ST证券、*ST证券和未完成股改证券    特殊处理 ST, *ST不放入计算中
+        self.lhb[u'09'] = 0  # 连续三个交易日内，日均换手率与前五个交易日的日均换手率的比值达到30倍，且换手率累计达20%的股票
+        self.lhb[u'11'] = 0  # 无价格涨跌幅限制的证券，出现异常波动停牌的
+        self.lhb[u'15'] = -1 # 连续三个交易日收盘价达到涨幅限制价格的ST证券、*ST证券和未完成股改证券 。特殊处理 ST *ST不放入计算中
+        self.lhb[u'16'] = -1 # 连续三个交易日收盘价达到跌幅限制价格的ST证券、*ST证券和未完成股改证券 。特殊处理 ST *ST不放入计算中
+        self.lhb[u'17'] = 1  # 当日无价格涨跌幅限制的股票,其盘中交易价格较当日开盘价上涨100%以上的股票。 特殊处理 此类股票不放入计算中
+        self.lhb[u'19'] = 1  # 当日有涨跌幅限制的A股,连续2个交易日触及涨幅限制,在这2个交易日中同一营业部净买入股数占当日总成交股数的比重30%以上,且上市公司未有重大事项公告的股票 
+        self.lhb[u'20'] = -1 # 当日有涨跌幅限制的A股,连续2个交易日触及跌幅限制,在这2个交易日中同一营业部净卖出股数占当日总成交股数的比重30%以上,且上市公司未有重大事项公告的股票
+        self.lhb[u'21'] = -1 # ST股票、*ST股票和S股连续三个交易日触及涨(跌)幅限制的股票
+        self.lhb[u'22'] = -1 # ST股票、*ST股票和S股连续三个交易日触及涨幅限制的股票
+        self.lhb[u'23'] = -1 # ST股票、*ST股票和S股连续三个交易日触及跌幅限制的股票
+        self.lhb[u'24'] = -1 # 连续三个交易日内，涨幅偏离值累计达到12%的ST证券、*ST证券和未完成股改证券
+        self.lhb[u'25'] = -1 # 连续三个交易日内，跌幅偏离值累计达到12%的ST证券、*ST证券和未完成股改证券
+        self.lhb[u'26'] = 1  # 当日无价格涨跌幅限制的股票，其盘中交易价格较当日开盘价上涨30%以上的股票 
+        self.lhb[u'27'] = -1 # 当日无价格涨跌幅限制的股票，其盘中交易价格较当日开盘价下跌30%以上的股票
+        self.lhb[u'28'] = 1  # 单只标的证券的当日融资买入数量达到当日该证券总交易量的50%以上
+        self.lhb[u'29'] = -1 # 单只标的证券的当日融券卖出数量达到当日该证券总交易量的50%以上
+        self.lhb[u'30'] = 0  # 当日无价格涨跌幅限制的A股，出现异常波动停牌的股票
+        self.lhb[u'32'] = 0  # 风险警示股票盘中换手率达到或超过30%
+        self.lhb[u'33'] = -1 # 退市整理的证券
+        '''
 
     def __lhb_pair(self, lhb_dict, bize_ob, daily_price_ob, symbol, date, direction):
         for ob in bize_ob:
@@ -184,8 +211,9 @@ class Nirvana(object):
     def __lhb_identity_strategy(self, lhb_pair):
         symbol = lhb_pair.symbol()
         date = lhb_pair.date()
-        if self.lhb[lhb_pair.chg_type()] == -1:  # 负面上榜不下单
-            MLog.write().debug('%d: %s 负面上榜不下单'%(date, symbol))
+        lhb_chg = self.lhb[lhb_pair.chg_type()]
+        if lhb_chg.direction()  == -1:  # 负面上榜不下单
+            MLog.write().info('%d: %d %s %s 负面上榜不下单'%(date, lhb_chg.direction(),  symbol,lhb_chg.name()))
             return False
         # 检测卖方中是否含有机构，知名游资，一线游资,敢死队
         if self.__lhb_identity_sale(lhb_pair.code_bize_sale(), date, symbol) == False:
@@ -203,16 +231,16 @@ class Nirvana(object):
         daily_price = lhb_pair.daily_price()
         symbol = lhb_pair.symbol()
         date = lhb_pair.date()
-        if self.lhb[lhb_pair.chg_type()] == -1:  # 负面上榜不下单
-            MLog.write().info('%d %s 负面上榜不下单'%(date, symbol))
+        lhb_chg = self.lhb[lhb_pair.chg_type()]
+        if lhb_chg.direction() == -1:  # 负面上榜不下单
+            MLog.write().info('%d %d %s %s 负面上榜不下单'%(date, lhb_chg.direction(), symbol, lhb_chg.name()))
             return False
 
+        MLog.write().info('%d %s %s 正面上榜'%(date, symbol, lhb_chg.name()))
         bize_buy_one = lhb_pair.bize_buy_from_pos(0)
         bize_buy_two = lhb_pair.bize_buy_from_pos(1)
         bize_sale_one = lhb_pair.bize_sale_from_pos(0)
 
-        # if self.__lhb_identity_strategy(self,lhb_pair) == -1:
-        #    return False
 
         if bize_sale_one is not None and bize_buy_two is None:  # 只有卖方
             MLog.write().info('%d: %s 只有卖方 不能下单 '%(date, symbol))
@@ -286,13 +314,13 @@ class Nirvana(object):
         daily_price = lhb_pair.daily_price()
         symbol = lhb_pair.symbol()
         
-        identity_signal = self.__lhb_identity_strategy(lhb_pair)
-        if identity_signal == -1:
-            signal = False
-        elif identity_signal == 1:
-            signal = True
-        else:
-            signal = self.__lhb_price_strategy(lhb_pair)
+        # identity_signal = self.__lhb_identity_strategy(lhb_pair)
+        # if identity_signal == -1:
+        #    signal = False
+        # elif identity_signal == 1:
+        #    signal = True
+        # else:
+        signal = self.__lhb_price_strategy(lhb_pair)
         return signal, symbol, daily_price
         # if signal:
         #    self.order_open(symbol, daily_price.avg_price(), 1, date)
