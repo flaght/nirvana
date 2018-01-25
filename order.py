@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-'''
-订单数据
-'''
+
 import datetime
 import time
 from mlog import MLog
@@ -14,69 +12,83 @@ GLOBAL_ORDER_ID = 100
 
 @unique
 class CombOffset(Enum):
-    open = 0 # 开仓
-    close = 1 # 平仓
-    force_close = 2 # 强平
-    close_today = 3 # 平今
-    close_yesterday = 4 # 平昨
-    local_force_close = 5 # 强减
+    open = 0  # 开仓
+    close = 1  # 平仓
+    force_close = 2  # 强平
+    close_today = 3  # 平今
+    close_yesterday = 4  # 平昨
+    local_force_close = 5  # 强减
+
 
 @unique
 class OrderPrice(Enum):
-    any_price = 1 # 任意价
-    limit_price = 2 # 限价
-    best_price = 3 # 最优价
-    last_price = 4 # 最新价
-    avg_price = 5 # 均价单
+    any_price = 1  # 任意价
+    limit_price = 2  # 限价
+    best_price = 3  # 最优价
+    last_price = 4  # 最新价
+    avg_price = 5  # 均价单
+
 
 @unique
 class Direction(Enum):
-    buy_direction = 1 # 买入
-    sell_direction = -1 # 卖出
+    buy_direction = 1  # 买入
+    sell_direction = -1  # 卖出
+
 
 @unique
 class OrderStatus(Enum):
-    unknown = -1 # 未知
-    not_traded = 0 # 未成交
-    entrust_traded = 1 # 委托成功
-    part_traded = 2 # 部分成交
-    all_traded = 3 # 全部成交
-    cacelled = 4 # 已撤销
-    rejected = 5 # 拒单
+    unknown = -1  # 未知
+    not_traded = 0  # 未成交
+    entrust_traded = 1  # 委托成功
+    part_traded = 2  # 部分成交
+    all_traded = 3  # 全部成交
+    cacelled = 4  # 已撤销
+    rejected = 5  # 拒单
+
 
 class Order(object):
+
+    """Summary of class here.
+        委托单类
+
+    Attributes:
+    """
+
     def __init__(self):
         self.__account_id = ''
         self.__symbol = ''
         self.__order_id = 0
-        self.__comb_offset_flag = 0 # 0 开仓 1 平仓 2 强平 3 平今 4 平昨 5 强减
+        self.__comb_offset_flag = 0  # 0 开仓 1 平仓 2 强平 3 平今 4 平昨 5 强减
         self.__direction = 0  # 1 买入 -1 卖出
-        self.__order_price_type = 0 # 1.任意价 2.限价 3.最优价 4.最新价
+        self.__order_price_type = 0  # 1.任意价 2.限价 3.最优价 4.最新价
         self.__limit_price = 0.0
-        self.__amount = 0 # 正数为持有多头仓，负数为持有空头仓
-        self.__strategy_id = 0 # 所属哪个策略
+        self.__amount = 0  # 正数为持有多头仓，负数为持有空头仓
+        self.__strategy_id = 0  # 所属哪个策略
         self.__create_time = 0  # 报单时间
-        self.__min_volume = 0 # 最小成交量
-        self.__fee = 0.0 # 手续费
-        self.__commission = 0.0 # 佣金
-        self.__commission_ratio = 0.0 # 佣金率
-        self.__stamp = 0.0 # 印花税
-        self.__stamp_ratio = 0.0 # 印花税率
-        self.__transfer = 0.0 # 过户费
-        self.__transfer_ratio = 0.0 # 过户费率
-        self.__margin = 0.0 # 保证金
-        self.__margin_ratio = 0.0 # 保证金率
-        self.__cost = 0.0 # 持仓费用(不包含手续费)
-        self.__status = OrderStatus.not_traded #初始化为未知
-        self.__hold_volume_id = 0 # 下平仓单时候记录持仓的ID，用于平仓盈亏计算
+        self.__min_volume = 0  # 最小成交量
+        self.__fee = 0.0  # 手续费
+        self.__commission = 0.0  # 佣金
+        self.__commission_ratio = 0.0  # 佣金率
+        self.__stamp = 0.0  # 印花税
+        self.__stamp_ratio = 0.0  # 印花税率
+        self.__transfer = 0.0  # 过户费
+        self.__transfer_ratio = 0.0  # 过户费率
+        self.__margin = 0.0  # 保证金
+        self.__margin_ratio = 0.0  # 保证金率
+        self.__cost = 0.0  # 持仓费用(不包含手续费)
+        self.__status = OrderStatus.not_traded  # 初始化为未知
+        self.__hold_volume_id = 0  # 下平仓单时候记录持仓的ID，用于平仓盈亏计算
 
     def to_csv(self):
-        dict = {'symbol':self.__symbol, 'order_id':self.__order_id, 'comb_offset': self.__comb_offset_flag.value,
-                'direction':self.__direction.value, 'order_type':self.__order_price_type.value, 'price':round(self.__limit_price,2),
-                'fee':round(self.fee(),2),'commission':round(self.__commission,2),'stamp':round(self.__stamp,2),'transfer':round(self.__transfer,2),
-                'cost':round(self.cost(),2),'hold_vol_id':self.__hold_volume_id,'status':self.__status.value,
-                'amount':self.__amount,'create_time':self.__create_time,
-                'min_volume':self.__min_volume}
+        dict = {'symbol': self.__symbol, 'order_id': self.__order_id,
+                'comb_offset': self.__comb_offset_flag.value,
+                'direction': self.__direction.value, 'order_type': self.__order_price_type.value,
+                'price': round(self.__limit_price, 2), 'fee':round(self.fee(), 2),
+                'commission': round(self.__commission, 2), 'stamp': round(self.__stamp, 2),
+                'transfer': round(self.__transfer, 2), 'cost': round(self.cost(), 2),
+                'hold_vol_id': self.__hold_volume_id, 'status': self.__status.value,
+                'amount': self.__amount, 'create_time':self.__create_time,
+                'min_volume': self.__min_volume}
         return dict
 
     def dump(self):
@@ -138,8 +150,11 @@ class Order(object):
         return self.__commission_ratio
 
     def fee(self):
-        # 开仓 佣金 + 过户费(上证)
-        # 平仓 佣金 + 印花税 + 过户费(上证)
+        """Performs operation fee blah.
+            手续费计算
+            开仓:佣金 + 过户费(上证)
+            平仓:佣金 + 印花税 + 过户费(上证)
+        """
         if self.__comb_offset_flag == CombOffset.open:
             return self.__commission + self.__transfer
         elif self.__comb_offset_flag == CombOffset.close:
@@ -180,7 +195,7 @@ class Order(object):
         self.__order_id = GLOBAL_ORDER_ID
         self.__create_time = second_time
 
-    def set_hold_volume_id(self,hold_volume_id):
+    def set_hold_volume_id(self, hold_volume_id):
         self.__hold_volume_id = hold_volume_id
 
     def set_create_time(self, create_time):
@@ -196,7 +211,9 @@ class Order(object):
         self.__order_price_type = order_price_type
 
     def set_limit_price(self, limit_price):
-        #需要处理，满足最小倍数价格
+        """Performs operation set_limit_price blah.
+            fix:需要处理，满足最小倍数价格
+        """
         self.__limit_price = limit_price
 
     def set_amount(self, amount):
@@ -211,20 +228,17 @@ class Order(object):
     def set_status(self, status):
         self.__status = status
 
-    # 印花税
     def set_stamp(self, stamp_ratio):
         self.__stamp_ratio = stamp_ratio
         self.__stamp = self.__limit_price * self.__min_volume * self.__amount  * stamp_ratio
 
-    # 佣金
     def set_commission(self, commission_ratio):
         self.__commission_ratio = commission_ratio
         commission = self.__limit_price * self.__amount * self.__min_volume * commission_ratio
-        self.__commission = commission if commission > 5 else 5
-    
-    # 过户费
+        self.__commission = commission if commission > 5 else 5 # 佣金不满5元,则需按5元计算
+
     def set_transfer(self, transfer_ratio):
-        self.__transfer_ratio  = transfer_ratio if self.__symbol[0:2] == 'SH' else 0.0
+        self.__transfer_ratio = transfer_ratio if self.__symbol[0:2] == 'SH' else 0.0
         self.__transfer = int((self.__amount * self.__min_volume) * transfer_ratio) + 1 if self.__symbol[0:2]=='SH' else 0.0
     
     def set_margin(self, margin_ratio):

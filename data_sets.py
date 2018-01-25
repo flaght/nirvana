@@ -5,11 +5,16 @@ import time
 import json
 import os
 
+
 class DataSets(object):
+
+    """Summary of class here.
+        bize数据处理类
+    Attributes:
+    """
 
     def __init__(self):
         self.__db_name = 'bize.db'
-
 
     def __create_class(self, db_engine):
         if not db_engine.check_table('class'):

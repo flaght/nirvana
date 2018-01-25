@@ -11,6 +11,7 @@ import datetime
 import pandas as pd
 from sqlite_manage_model import SQLLiteStorage
 
+
 class THSLHBClient(object):
     def __init__(self, type=1):
         self.__sbcs_url = 'http://data.10jqka.com.cn/ifmarket/lhbyyb/type/1/tab/sbcs/field/sbcs/sort/desc/page/'

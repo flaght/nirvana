@@ -8,6 +8,13 @@ import string
 
 class Client(object):
 
+    """Summary of class here.
+        HTTP类
+
+    Attributes:
+        host:爬取域名
+    """
+
     def __init__(self, host='xueqiu.com'):
         self.__host = host
         self.__agent_list = ['Mozilla/5.0 (Windows NT 6.2; rv:16.0) Gecko/20100101 Firefox/16.0',
@@ -49,10 +56,10 @@ class Client(object):
     def request(self, url):
         header = {
             'Host': self.__host,
-            'User-Agent':self.__agent_list[0],
-            'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Connection':'keep-alive',
-            'Cookie':self.creat_cookie()
+            'User-Agent': self.__agent_list[0],
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Connection': 'keep-alive',
+            'Cookie': self.creat_cookie()
         }
 
         request = urllib2.Request(url, headers=header)

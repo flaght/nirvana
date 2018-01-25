@@ -14,10 +14,20 @@ DEFAULT_CASH = 100000
 
 
 class Nirvana(object):
+
+    """Summary of class here.
+        龙虎榜策略类
+
+        印花税:千分之一
+        交易佣金:千分之一点五
+        过户费:千分之一
+    Attributes:
+        limit_order: 委托单队列
+    """
+
     __strategy_id = 1002
     __account_id = 10001
 
-    # 印花税:千分之一  交易佣金:千分之一点五  过户费:千分之一
     def __init__(self, limit_order):
 
         self.__sl = 0.03  # 止损
@@ -45,17 +55,25 @@ class Nirvana(object):
         self.long_volumes = OrderedDict()  # 持有多头仓
         self.short_volumes = OrderedDict()  # 持有空头仓
         
-        self.bize_dict = OrderedDict() # 营业部，机构基本信息
+        self.bize_dict = OrderedDict()  # 营业部，机构基本信息
         self.__init_lhb_chg()
         self.__init_bize()
 
     def __reset(self):
+        """Performs operation __reset blah.
+            重置当日统计的信息
+
+        Attributes:
+        """
         self.__limit_order.clear()
         self.history_limit_volumes.clear()
         self.__history_limit_order.clear()
 
-
     def __init_bize(self):
+        """Performs operation __init_bize blah.
+            从bize.db读取营业厅信息
+        Attributes:
+        """
         db_engine = SQLLiteStorage('bize.db', 0)
         result_list = db_engine.get_data('select xid,name,jianpin,identity,identity_name from bize')
         for bize_rl in result_list:
@@ -72,12 +90,20 @@ class Nirvana(object):
             self.bize_dict[bize.xid()] = bize
 
     def __get_bize(self, xid):
+        """Performs operation __get_bize blah.
+            获取营业厅信息
+        Attributes:
+            xid:营业厅id
+        """
         if self.bize_dict.has_key(xid):
             return self.bize_dict[xid]
         return None
 
-
     def __init_lhb_chg(self):
+        """Performs operation __init_lhb_chg blah.
+            从bize.db读取龙虎榜涨跌分类
+        Attributes:
+        """
         db_engine = SQLLiteStorage('bize.db', 0)
         result_list = db_engine.get_data('select xid,chg_type,direction,name,chg_desc from class')
         for cls_rl in result_list:
@@ -89,37 +115,17 @@ class Nirvana(object):
             lhb_chg.set_chg_desc(cls_rl[4])
             self.lhb[lhb_chg.chg_type()] = lhb_chg
 
-        '''
-        self.lhb[u'01'] = 1  # 涨幅偏离值达7%的证券
-        self.lhb[u'02'] = -1 # 跌幅偏离值达7%的证券
-        self.lhb[u'03'] = 0  # 振幅值达15%的证券
-        self.lhb[u'04'] = 0  # 换手率达20%的证券
-        self.lhb[u'05'] = 1  # 连续三个交易日内，非ST,*ST,S证券异常期间收盘价 涨幅偏离值累计达20%的证券
-        self.lhb[u'06'] = -1 # 连续三个交易日内，非ST,*ST,S证券异常期间收盘价跌幅偏离值累计达20%的证券
-        self.lhb[u'07'] = -1  # 连续三个交易日内，涨幅偏离值累计达到15%的ST证券、*ST证券和未完成股改证券   特殊处理 ST, *ST不放入计算中
-        self.lhb[u'08'] = -1 # 连续三个交易日内，跌幅偏离值累计达到15%的ST证券、*ST证券和未完成股改证券    特殊处理 ST, *ST不放入计算中
-        self.lhb[u'09'] = 0  # 连续三个交易日内，日均换手率与前五个交易日的日均换手率的比值达到30倍，且换手率累计达20%的股票
-        self.lhb[u'11'] = 0  # 无价格涨跌幅限制的证券，出现异常波动停牌的
-        self.lhb[u'15'] = -1 # 连续三个交易日收盘价达到涨幅限制价格的ST证券、*ST证券和未完成股改证券 。特殊处理 ST *ST不放入计算中
-        self.lhb[u'16'] = -1 # 连续三个交易日收盘价达到跌幅限制价格的ST证券、*ST证券和未完成股改证券 。特殊处理 ST *ST不放入计算中
-        self.lhb[u'17'] = 1  # 当日无价格涨跌幅限制的股票,其盘中交易价格较当日开盘价上涨100%以上的股票。 特殊处理 此类股票不放入计算中
-        self.lhb[u'19'] = 1  # 当日有涨跌幅限制的A股,连续2个交易日触及涨幅限制,在这2个交易日中同一营业部净买入股数占当日总成交股数的比重30%以上,且上市公司未有重大事项公告的股票 
-        self.lhb[u'20'] = -1 # 当日有涨跌幅限制的A股,连续2个交易日触及跌幅限制,在这2个交易日中同一营业部净卖出股数占当日总成交股数的比重30%以上,且上市公司未有重大事项公告的股票
-        self.lhb[u'21'] = -1 # ST股票、*ST股票和S股连续三个交易日触及涨(跌)幅限制的股票
-        self.lhb[u'22'] = -1 # ST股票、*ST股票和S股连续三个交易日触及涨幅限制的股票
-        self.lhb[u'23'] = -1 # ST股票、*ST股票和S股连续三个交易日触及跌幅限制的股票
-        self.lhb[u'24'] = -1 # 连续三个交易日内，涨幅偏离值累计达到12%的ST证券、*ST证券和未完成股改证券
-        self.lhb[u'25'] = -1 # 连续三个交易日内，跌幅偏离值累计达到12%的ST证券、*ST证券和未完成股改证券
-        self.lhb[u'26'] = 1  # 当日无价格涨跌幅限制的股票，其盘中交易价格较当日开盘价上涨30%以上的股票 
-        self.lhb[u'27'] = -1 # 当日无价格涨跌幅限制的股票，其盘中交易价格较当日开盘价下跌30%以上的股票
-        self.lhb[u'28'] = 1  # 单只标的证券的当日融资买入数量达到当日该证券总交易量的50%以上
-        self.lhb[u'29'] = -1 # 单只标的证券的当日融券卖出数量达到当日该证券总交易量的50%以上
-        self.lhb[u'30'] = 0  # 当日无价格涨跌幅限制的A股，出现异常波动停牌的股票
-        self.lhb[u'32'] = 0  # 风险警示股票盘中换手率达到或超过30%
-        self.lhb[u'33'] = -1 # 退市整理的证券
-        '''
-
     def __lhb_pair(self, lhb_dict, bize_ob, daily_price_ob, symbol, date, direction):
+        """Performs operation __lhb_pair blah.
+            存储龙虎榜买卖方信息
+        Attributes:
+            lhb_dict:存储龙虎榜字典
+            bize_ob:雪球龙虎榜信息
+            daily_price_ob:雪球龙虎榜日行情
+            symbol:交易标的
+            date:交易日期
+            direction:买卖方向, 1:买  -1:卖
+        """
         for ob in bize_ob:
             bize_lhb = BizeLHB()
             bize_lhb.xq_parser(ob)
@@ -146,6 +152,12 @@ class Nirvana(object):
             lhb_dict[lhb_pair.chg_type()] = lhb_pair
 
     def __lhb_parser(self, lhb, date):
+        """Performs operation __lhb_parser blah.
+            解析龙虎榜买卖方信息
+        Attributes:
+            lhb:雪球龙虎榜信息
+            date:交易日期
+        """
         lhb_dict = OrderedDict()
         daily_price_ob = None
         buy_bize_ob = None
@@ -162,7 +174,15 @@ class Nirvana(object):
         return lhb_dict
 
     def __lhb_buy_price(self, bize_buy_one, bize_buy_two, lhb_pair, date, symbol):
-        '''
+        """Performs operation __lhb_buy_price blah.
+            龙虎榜买方席位交易量判断
+        Attributes:
+            bize_buy_one:买一席位身份
+            bize_buy_two:买二席位身份
+            lhb_pair:龙虎榜买卖双方
+            date:交易日期
+            symbol:交易标的
+        """
         if bize_buy_two is None and bize_buy_one is not None:  # 只有买一方， 防止一家独大
             # MLog.write().debug('%d: %s 只有买一方，存在一家独大危险'%(date, symbol))
             return False
@@ -175,26 +195,41 @@ class Nirvana(object):
         if bize_sale_opp is not None:
             # MLog.write().debug('%d: %s 买一方非单纯买方'%(date, symbol))
             return False
-        '''
         return True
 
 
     def __lhb_identity_sale(self, bize_sale, date, symbol):
+        """Performs operation __lhb_identity_sale blah.
+            龙虎榜卖方身份信息判断
+        Attributes:
+            bize_sale:龙虎榜卖方信息
+            date:交易日期
+            symbol:交易标的
+        """
         for k,bize_lhb in bize_sale.items():
             if bize_lhb.bize().identity() == 100 or bize_lhb.bize().identity() == 1 or bize_lhb.bize().identity() == 1 or bize_lhb.bize().identity() == 3:
                 MLog.write().info('%d %s 卖方席位中有%s, 不能下单'%(date,symbol,  bize_lhb.bize().identity_name()))
                 return False
         return True
 
-    # 买方席位中有重要身份，只要买方总量大于卖方总量则可以下单
     def __lhb_identity_buy(self, lhb_pair, date, symbol):
+        """Performs operation __lhb_identity_buy blah.
+            龙虎榜买方方身份信息判断
+        Attributes:
+            lhb_pair:龙虎榜买卖方信息
+            date:交易日期
+            symbol:交易标的
+
+        买方席位中有重要身份，只要买方总量大于卖方总量则可以下单
+        """
+
         is_identity = 0
         latest_bize = None
         for k, bize_lhb in lhb_pair.code_bize_buy().items():
             if bize_lhb.bize().identity() == 100 or bize_lhb.bize().identity() == 1 or bize_lhb.bize().identity() == 2 or bize_lhb.bize().identity() == 3:
                 is_identity = 1
                 latest_bize = bize_lhb.bize()
-                break;
+                break
         if is_identity == 0:
             return False
 
@@ -209,12 +244,19 @@ class Nirvana(object):
         return True
 
     def __lhb_identity_strategy(self, lhb_pair):
+        """Performs operation __lhb_identity_strategy blah.
+            判断龙虎榜买卖方身份
+        Attributes:
+            lhb_pair:龙虎榜买卖方信息
+        """
+
         symbol = lhb_pair.symbol()
         date = lhb_pair.date()
         lhb_chg = self.lhb[lhb_pair.chg_type()]
-        if lhb_chg.direction()  == -1:  # 负面上榜不下单
+        if lhb_chg.direction() == -1:  # 负面上榜不下单
             MLog.write().info('%d: %d %s %s 负面上榜不下单'%(date, lhb_chg.direction(),  symbol,lhb_chg.name()))
             return False
+
         # 检测卖方中是否含有机构，知名游资，一线游资,敢死队
         if self.__lhb_identity_sale(lhb_pair.code_bize_sale(), date, symbol) == False:
             return -1
@@ -228,6 +270,11 @@ class Nirvana(object):
         return 0
 
     def __lhb_price_strategy(self, lhb_pair):
+        """Performs operation __lhb_price_strategy blah.
+            判断龙虎榜买卖方交易量
+        Attributes:
+            lhb_pair:龙虎榜买卖方信息
+        """
         daily_price = lhb_pair.daily_price()
         symbol = lhb_pair.symbol()
         date = lhb_pair.date()
@@ -267,6 +314,15 @@ class Nirvana(object):
             return True
 
     def order_close(self, symbol, stop_price, hold_volume_id, amount, create_time):
+        """Performs operation order_close blah.
+            下平仓单
+        Attributes:
+            symbol:交易标的
+            stop_price:平仓价
+            hold_volume_id:持仓的ID
+            amount:平仓手数
+            create_time:创建时间
+        """
         order = self.__create_order_price(symbol, stop_price, amount, hold_volume_id, CombOffset.close,
                                           Direction.sell_direction, OrderPrice.limit_price,
                                           create_time)
@@ -274,6 +330,14 @@ class Nirvana(object):
         self.__working_limit_order[order.order_id()] = order
 
     def order_open(self, symbol, avg_price, amount, create_time):
+        """Performs operation order_open blah.
+            下开仓单
+        Attributes:
+            symbol:交易标的
+            avg_price:开仓价
+            amount:平仓手数
+            create_time:创建时间
+        """
         order = self.__create_order_price(symbol, avg_price, amount, 0, CombOffset.open,
                                           Direction.buy_direction, OrderPrice.avg_price,
                                           create_time)
@@ -281,9 +345,22 @@ class Nirvana(object):
         # order.dump()
         self.__working_limit_order[order.order_id()] = order
 
-    # 先以当前行情均价创建，成交以当天行情均价成交
     def __create_order_price(self, symbol, avg_price, amount, hold_volume_id,
                              off_flag, direction, price_type, create_time):
+
+        """Performs operation order_open blah.
+            下开仓单
+        Attributes:
+            symbol:交易标的
+            avg_price:开仓价
+            amount:平仓手数
+            hold_volume_id:持仓的ID,若是开仓则为0
+            off_flag:交易类别
+            direction:交易方向
+            price_type:交易单类型
+            create_time:创建时间
+        先以当前行情均价创建，成交以当天行情均价成交
+        """
         order = Order()
         order.create_order_id()
         order.set_create_time(create_time)
@@ -311,6 +388,13 @@ class Nirvana(object):
         return order
 
     def __strategy_commit(self, lhb_pair, date):
+
+        """Performs operation __strategy_commit blah.
+            龙虎榜单个交易标的策略判断
+        Attributes:
+            lhb_pair:龙虎榜买卖方信息
+            date:交易日
+        """
         daily_price = lhb_pair.daily_price()
         symbol = lhb_pair.symbol()
         
@@ -326,6 +410,12 @@ class Nirvana(object):
         #    self.order_open(symbol, daily_price.avg_price(), 1, date)
 
     def __lhb_strategy(self, lhb_dict, date):
+        """Performs operation __lhb_strategy blah.
+            龙虎榜策略判断
+        Attributes:
+            lhb_dict:当天所有龙虎榜信息
+            date:交易日
+        """
         for key, lhb_pair in lhb_dict.items():
             signal, symbol, daily_price = self.__strategy_commit(lhb_pair, date)
             if not signal:
@@ -333,8 +423,16 @@ class Nirvana(object):
         self.order_open(symbol, daily_price.avg_price(), 1, date)
 
     def __position_trade(self, date, daily_price, position):
+
+        """Performs operation __position_trade blah.
+            持仓判断,是否达到止盈止损
+        Attributes:
+            date:交易日
+            daily_price:当天日行情
+            position:标的的持仓信息
+        """
         
-        if date <= position.create_time(): #防止當天購買又當天賣出情況
+        if date <= position.create_time():  # 防止當天購買又當天賣出情況
             return
 
         sl_price = position.limit_price() * (1 - self.__sl)  # 止损价
@@ -355,6 +453,12 @@ class Nirvana(object):
             #    date, position.symbol(), position.limit_price(),sl_price,tp_price,high_price,low_price))
 
     def on_market_data(self, date, daily_price_list):
+        """Performs operation on_market_data blah.
+            接收行情数据
+        Attributes:
+            date:交易日
+            daily_price_list:当天日行情列表
+        """
         for k, value in self.long_volumes.items():
             if daily_price_list.has_key(value.symbol()[2:]):
                 daily_price = daily_price_list[value.symbol()[2:]]
@@ -363,6 +467,11 @@ class Nirvana(object):
                     self.__position_trade(date, daily_price, value)
 
     def on_order(self, order):
+        """Performs operation on_order blah.
+            接收委托单
+        Attributes:
+            order:委托单
+        """
         if order.status() == OrderStatus.entrust_traded:  # 委托成功锁住费用
             if order.comb_offset_flag() == CombOffset.open:
                 self.account.insert_order_cash(order.cost(), order.fee())
@@ -373,6 +482,12 @@ class Nirvana(object):
             self.__limit_order[order.order_id()] = order
 
     def on_volume(self, vol, order):
+        """Performs operation on_volume blah.
+            接收成交量单
+        Attributes:
+            vol:成交量单
+            order:成交量单对应的委托单
+        """
         # 从委托中删除
         del self.__limit_order[vol.order_id()]
         self.history_limit_volumes[vol.trader_id()] = vol
@@ -389,10 +504,22 @@ class Nirvana(object):
                 del self.long_volumes[order.hold_volume_id()]
 
     def on_lhb_event(self, ob, date):
+        """Performs operation on_lhb_event blah.
+            接收每日龙虎榜信息
+        Attributes:
+            ob:雪球龙虎榜信息
+            date:交易日
+        """
         lhb_dict = self.__lhb_parser(ob, date)
         self.__lhb_strategy(lhb_dict, date)
 
-    def calc_settle(self, date, daily_price_list):  # 计算当日结算
+    def calc_settle(self, date, daily_price_list):
+        """Performs operation calc_settle blah.
+            收盘后对当日进行结算
+        Attributes:
+            daily_price_list:当日行情列表
+            date:交易日
+        """
         daily_profit = 0.0
         daily_cost = 0.0
         MLog.write().debug('calc_settle trade_date:%d' % date)
@@ -401,7 +528,7 @@ class Nirvana(object):
                 continue
             daily_price = daily_price_list[value.symbol()[2:]]
 
-            #若停牌则以最近收盘价为结算价
+            # 若停牌则以最近收盘价为结算价
             if daily_price.is_use() == 0 :
                 settle_price = daily_price.latest_price()
 
@@ -443,6 +570,11 @@ class Nirvana(object):
         self.__reset()
 
     def calc_result(self):
+        """Performs operation calc_result blah.
+            计算当日的权益,净值,涨跌幅,回撤等
+        Attributes:
+        """
+
         max_profit = 0.0
         total_profit = 0.0
         for key, value in self.__trader_record.items():
@@ -466,7 +598,7 @@ class Nirvana(object):
             daily_record.calc_result()
             daily_record.dump()
             summary_record.record_volume(daily_record.mktime(), daily_record.volume_tocsv(),
-                                        daily_record.position_tocsv())
+                                         daily_record.position_tocsv())
             summary_record.record_order(daily_record.mktime(), daily_record.order_tocsv())
 
             summary_record.record_daily(daily_record.to_csv(),daily_record.to_dataframe())

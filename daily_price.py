@@ -1,17 +1,22 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-'''
-日行情数据
-'''
 
 from mlog import MLog
 
+
 class DailyPrice(object):
+
+    """Summary of class here.
+        日行情类
+
+    Attributes:
+    """
+
     def __init__(self):
         self.__trade_date = 0  # 交易日
         self.__symbol = ''  # 标的
-        self.__latest_price = 0.0  # 前一个收盘
+        self.__latest_price = 0.0  # 前一个收盘价
         self.__today_open = 0.0  # 今日开盘
         self.__today_close = 0.0  # 今日收盘
         self.__today_high = 0.0  # 今日最高价
@@ -31,6 +36,13 @@ class DailyPrice(object):
         self.__list_date = 0 # 上市日期
 
     def df_parser(self, df):
+
+        """Performs operation df_parser blah.
+            解析DataFrame数据
+        Attributes:
+            df:DataFrame数据
+        """
+
         self.__symbol = df[1]
         self.__trade_date = int(df[2])
         self.__latest_price = df[3]
@@ -44,6 +56,13 @@ class DailyPrice(object):
         self.__list_date = df [11]
 
     def xq_parser(self, ob):
+
+        """Performs operation xq_parser blah.
+            解析雪球json数据
+        Attributes:
+            ob:雪球json数据
+        """
+
         self.__trade_date = int(ob.get('tradedate'))
         self.__latest_price = ob.get('lclose')
         self.__today_open = ob.get('topen')
@@ -139,8 +158,14 @@ class DailyPrice(object):
     def is_zero(self, price):
         return -0.000001 < price < 0.000001
 
-    # 1 可以使用  0 不能卖，不能买 -1 不能买,可以卖  -2 不能卖,可以买
     def is_use(self):
+        """Performs operation is_use blah.
+            判断当天行情是否可用
+        Attributes:
+        Return:
+             1 可以使用  0 不能卖，不能买 -1 不能买,可以卖  -2 不能卖,可以买
+        """
+
         # 是否停牌
         if self.is_zero(self.__today_open) or self.is_zero(self.__today_close) or self.is_zero(
                 self.__today_high) or self.is_zero(self.__today_low):
