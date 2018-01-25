@@ -6,8 +6,6 @@ Created on 2016年11月6日
 """
 
 from sqlite_ext import SQLiteExt
-import threading
-import os
 
 class SQLLiteStorage():
 

@@ -4,9 +4,11 @@
 
 import datetime
 import time
-from mlog import MLog
-from order import CombOffset,Direction
+import sys
 from collections import OrderedDict
+sys.path.append("..")
+from mlog import MLog
+from td_base.order import CombOffset, Direction
 
 GLOBAL_VOLUME_ID = 100
 

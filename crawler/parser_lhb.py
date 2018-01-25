@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from bs4 import BeautifulSoup
-from sqlite_manage_model import SQLLiteStorage
 import csv
 import sys
 import json
@@ -9,6 +8,10 @@ import base64
 import zlib
 import os
 import time
+sys.path.append("..")
+from db.sqlite_manage_model import SQLLiteStorage
+
+
 class THSLHB(object):
     def __init__(self):
         self.__code = ''

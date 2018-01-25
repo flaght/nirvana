@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
+import sys
 from mlog import MLog
-from daily_price import DailyPrice
 from collections import OrderedDict
+sys.path.append("..")
+from td_base.daily_price import DailyPrice
 
 class Bize(object):
     """Summary of class here.

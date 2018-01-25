@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import tushare as ts
 from client import Client
-from mlog import MLog
 import json
 import os
+import sys
+sys.path.append("..")
+from mlog import MLog
 
 
 class XQLHBClient(object):

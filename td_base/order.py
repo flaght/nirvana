@@ -4,6 +4,8 @@
 
 import datetime
 import time
+import sys
+sys.path.append("..")
 from mlog import MLog
 from enum import Enum, unique
 

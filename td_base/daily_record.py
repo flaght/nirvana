@@ -3,7 +3,6 @@
 
 from collections import OrderedDict
 import pandas as pd
-from mlog import MLog
 import copy
 import math
 import numpy as np
@@ -11,6 +10,9 @@ import time
 import datetime
 import csv
 import os
+import sys
+sys.path.append("..")
+from mlog import MLog
 
 TDAYS_PER_YEAR = 250
 

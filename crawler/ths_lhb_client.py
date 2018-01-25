@@ -7,9 +7,11 @@ import zlib
 import time
 import os
 import json
+import sys
 import datetime
 import pandas as pd
-from sqlite_manage_model import SQLLiteStorage
+sys.path.append("..")
+from db.sqlite_manage_model import SQLLiteStorage
 
 
 class THSLHBClient(object):

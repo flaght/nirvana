@@ -2,6 +2,8 @@
 # coding=utf-8
 
 from order import Direction, CombOffset
+import sys
+sys.path.append("..")
 from mlog import MLog
 
 
