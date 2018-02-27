@@ -8,7 +8,8 @@ from td_base.account import Account
 from td_base.daily_record import DailyRecord, SummaryRecord
 from td_base.daily_price import DailyPrice
 from lhb.bize_lhb import BizeLHB, LHBPair, Bize, LHBChg
-from sqlite_manage_model import SQLLiteStorage
+from db.sqlite_manage_model import SQLLiteStorage
+import config as Config
 from mlog import MLog
 
 DEFAULT_CASH = 100000
@@ -75,7 +76,7 @@ class Nirvana(object):
             从bize.db读取营业厅信息
         Attributes:
         """
-        db_engine = SQLLiteStorage('bize.db', 0)
+        db_engine = SQLLiteStorage(Config.BIZE_DB_FILE, 0)
         result_list = db_engine.get_data('select xid,name,jianpin,identity,identity_name from bize')
         for bize_rl in result_list:
             bize = Bize()
@@ -105,7 +106,7 @@ class Nirvana(object):
             从bize.db读取龙虎榜涨跌分类
         Attributes:
         """
-        db_engine = SQLLiteStorage('bize.db', 0)
+        db_engine = SQLLiteStorage(Config.BIZE_DB_FILE, 0)
         result_list = db_engine.get_data('select xid,chg_type,direction,name,chg_desc from class')
         for cls_rl in result_list:
             lhb_chg = LHBChg()
@@ -184,6 +185,7 @@ class Nirvana(object):
             date:交易日期
             symbol:交易标的
         """
+        
         if bize_buy_two is None and bize_buy_one is not None:  # 只有买一方， 防止一家独大
             # MLog.write().debug('%d: %s 只有买一方，存在一家独大危险'%(date, symbol))
             return False
@@ -196,6 +198,7 @@ class Nirvana(object):
         if bize_sale_opp is not None:
             # MLog.write().debug('%d: %s 买一方非单纯买方'%(date, symbol))
             return False
+        
         return True
 
 

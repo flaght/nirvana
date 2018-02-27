@@ -8,7 +8,9 @@ Created on 2016年11月6日
 
 import sqlite3
 import os
-
+import sys
+sys.path.append("..")
+from mlog import MLog
 
 class SQLiteExt(object):
     def __init__(self, name, type, timeout=5):
@@ -36,7 +38,7 @@ class SQLiteExt(object):
                 self.type = 1
 
         except Exception, e:
-            mlog.log().error('sqlite3 error:%s' % e)
+            MLog.write().error('sqlite3 error:%s' % e)
             return
 
     def __get_cursor(self):
@@ -56,11 +58,11 @@ class SQLiteExt(object):
         连接对象"""
         conn = sqlite3.connect(path)
         if os.path.exists(path) and os.path.isfile(path):
-            mlog.log().info('硬盘上面:[{}]'.format(path))
+            MLog.write().error('硬盘上面:[{}]'.format(path))
             return conn
         else:
             conn = None
-            mlog.log().info('内存上面:[:memory:]')
+            MLog.write().error('内存上面:[:memory:]')
             return sqlite3.connect(':memory:')
 
     def __close_all(self, cur):
@@ -82,7 +84,7 @@ class SQLiteExt(object):
             self.conn.commit()
             self.__close_all(cur)
         else:
-            mlog.log().error('the [{}] is empty or equal None!'.format(table))
+            MLog.write().error('the [{}] is empty or equal None!'.format(table))
 
     def check_table(self, table):
         """检测此表是否存在"""
@@ -100,7 +102,7 @@ class SQLiteExt(object):
             self.conn.commit()
             self.__close_all(cur)
         else:
-            mlog.log().error('the [{}] is empty or equal None!'.format(sql))
+            MLog.write().error('the [{}] is empty or equal None!'.format(sql))
 
 
     def save(self, sql, data):
@@ -113,7 +115,7 @@ class SQLiteExt(object):
                     self.conn.commit()
                 self.__close_all(cur)
         else:
-            mlog.log().error('the [{}] is empty or equal None!'.format(sql))
+            MLog.write().error('the [{}] is empty or equal None!'.format(sql))
 
     def update(self, sql):
         count = 0

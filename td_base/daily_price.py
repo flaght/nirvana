@@ -54,7 +54,7 @@ class DailyPrice(object):
         self.__avg_price = df[8]
         self.__vol = df[9]
         self.__amount = df[10]
-        self.__list_date = df [11]
+        self.__list_date = df[11]
 
     def xq_parser(self, ob):
 

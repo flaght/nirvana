@@ -13,7 +13,7 @@ import os
 import sys
 sys.path.append("..")
 from mlog import MLog
-
+import config as Config
 TDAYS_PER_YEAR = 250
 
 
@@ -47,7 +47,7 @@ class SummaryRecord(object):
 
         time_now_flag = time.strftime('%Y-%m-%d_%H:%M:%S',
                                       time.localtime(time.time()))
-        dir = output + '/' + str(time_now_flag.split('_')[0]) + '/' + str(str(time.time()).split('.')[0])
+        dir = Config.RECORD_BASE_DIR + output + '/' + str(time_now_flag.split('_')[0]) + '/' + str(str(time.time()).split('.')[0])
 
         self.dir = dir
         if not os.path.exists(dir):
