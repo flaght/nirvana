@@ -1,4 +1,0 @@
-symbol,trader_id,order_id,direction,price,comb_offset,cost,fee,commission,stamp,transfer,daily_profit,settle_price,amount,min_volume,create_time
-SH600722,5611,5777,1,10.88,0,1088.25,6.0,5.0,0.0,1.0,3.75,10.98,1,100,20161213
-SZ002819,5612,5778,1,50.15,0,5014.6,7.52,7.52,0.0,0.0,466.88,54.89,1,100,20161213
-SZ000519,5613,5779,1,14.54,0,1453.85,5.0,5.0,0.0,0.0,7.15,14.66,1,100,20161213

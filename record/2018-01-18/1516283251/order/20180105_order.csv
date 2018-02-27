@@ -1,4 +1,0 @@
-symbol,order_id,comb_offset,direction,order_type,price,fee,commission,stamp,transfer,cost,hold_vol_id,status,amount,create_time,min_volume
-SZ000631,23484,1,-1,5,4.61,5.46,5.0,0.46,0.0,460.54,22999,3,1,20180105,100
-SZ000938,23485,1,-1,5,70.39,17.6,10.56,7.04,0.0,7039.2,23009,3,1,20180105,100
-SZ002796,23486,1,-1,5,32.78,8.28,5.0,3.28,0.0,3277.74,23053,3,1,20180105,100
