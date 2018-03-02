@@ -25,10 +25,10 @@ class Client(object):
         pass
 
     def creat_cookie(self):
-        cookie = 'xq_a_token=9fe68a74102e36c95d83680e70152894648189b5; '\
-                + 'xq_a_token.sig=Wp2RDfA0m2SS1--eP6TyzeJrNqE;  '\
-                + 'xq_r_token=31f446a0ba3f00cf0ec805ef008a3ad7d7ef5f6e; '\
-                + 'xq_r_token.sig=-MGYDh3MlR7dkoz1vYeWUVTTyoQ;'\
+        cookie = 'xq_a_token=5c915d14d91dc74b5f2e4c3b4753137ae66c1926; '\
+                + 'xq_a_token.sig=CGCHkBovlWaQtWbwukG6L3FRNIA;  '\
+                + 'xq_r_token=e796a61232e2cf0d90d560d30af22b227d8f7eeb; '\
+                + 'xq_r_token.sig=VeCkcFeNm3Vszkg9DbEZW9Pg0pA;'\
 
         u = string.join(random.sample({'0', '1', '2', '3', '4', '5', \
                                        '6', '7', '8', '9', '0', '1', \
@@ -68,13 +68,14 @@ class Client(object):
     
 
 if __name__ == "__main__":
-    client = Client('data.10jqka.com.cn')
+    client = Client('xueqiu.com')
+    print client.request('https://xueqiu.com/stock/f10/bizunittrdinfo.json?date=20170105')
     # print client.creat_cookie()
-    html = client.request('http://data.10jqka.com.cn/ifmarket/lhbyyb/type/1/tab/sbcs/field/sbcs/sort/desc/page/1/')
-    detector = icu.CharsetDetector()
-    detector.setText(html)
-    match = detector.detect()
+    # html = client.request('http://data.10jqka.com.cn/ifmarket/lhbyyb/type/1/tab/sbcs/field/sbcs/sort/desc/page/1/')
+    # detector = icu.CharsetDetector()
+    # detector.setText(html)
+    # match = detector.detect()
 
-    print (match.getName())
+    # print (match.getName())
 
-    print (html.decode(match.getName()))
+    # print (html.decode(match.getName()))
