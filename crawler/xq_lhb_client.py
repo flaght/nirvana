@@ -10,11 +10,12 @@ from mlog import MLog
 
 class XQLHBClient(object):
     
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date, end_date, lb = 1):
         self.__base_list = 'https://xueqiu.com/stock/f10/bizunittrdinfo.json'
         self.__base_detail = 'https://xueqiu.com/stock/f10/bizunittrdinfo.json' 
         self.__trade_date = []
-        self.__init_trade(start_date, end_date)
+        if lb:
+            self.__init_trade(start_date, end_date)
         self.__client = Client()
 
     def __init_trade(self,start_date, end_date):
@@ -59,6 +60,32 @@ class XQLHBClient(object):
     def crawler_lhb(self):
         for td in self.__trade_date:
             self.__crawler_lhb_list(td)
+
+    def run_crawler_lhb_detail(self, symbol, end_date):
+        url = self.__base_detail + '?symbol=' + symbol + '&date=' + str(end_date)
+        MLog.write().info('%s' %(url))
+        lhb_detail_obj = json.loads(self.__client.request(url))
+        if lhb_detail_obj is None:
+            return None
+        lhb_detail = lhb_detail_obj.get('detail')
+        if lhb_detail is None:
+            return None
+        return lhb_detail
+
+    def run_crawler_lhb(self, end_date):
+        lhb_dict = {}
+        url = self.__base_list + '?date=' + str(end_date)
+        MLog.write().info('%s' %(url))
+        lhb_obj = json.loads(self.__client.request(url))
+        lhb_list = lhb_obj.get('list')
+        if lhb_list is None:
+            return
+        for lhb in lhb_list:
+            symbol = lhb.get('symbol')
+            detail = self.run_crawler_lhb_detail(symbol, end_date)
+            if detail :
+                lhb_dict[symbol] = detail
+        return lhb_dict
 
 if __name__ == "__main__":
     MLog.config(name='xq_cralwer')

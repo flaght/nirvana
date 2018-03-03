@@ -30,8 +30,9 @@ class Nirvana(object):
     __strategy_id = 1002
     __account_id = 10001
 
-    def __init__(self, limit_order):
+    def __init__(self, limit_order, lb = 1):
 
+        self._lb = lb
         self.__sl = 0.03  # 止损
         self.__tp = 0.06  # 止盈
 
@@ -423,8 +424,14 @@ class Nirvana(object):
         for key, lhb_pair in lhb_dict.items():
             signal, symbol, daily_price = self.__strategy_commit(lhb_pair, date)
             if not signal:
-                return
-        self.order_open(symbol, daily_price.avg_price(), 1, date)
+                if self._lb:
+                    return
+                else:
+                    return signal, symbol
+        if self._lb:
+            self.order_open(symbol, daily_price.avg_price(), 1, date)
+        else:
+            return signal, symbol
 
     def __position_trade(self, date, daily_price, position):
 
@@ -515,7 +522,9 @@ class Nirvana(object):
             date:交易日
         """
         lhb_dict = self.__lhb_parser(ob, date)
-        self.__lhb_strategy(lhb_dict, date)
+        signal, symbol = self.__lhb_strategy(lhb_dict, date)
+        if not self._lb:
+            return signal, symbol
 
     def calc_settle(self, date, daily_price_list):
         """Performs operation calc_settle blah.
