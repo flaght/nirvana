@@ -25,10 +25,10 @@ class Client(object):
         pass
 
     def creat_cookie(self):
-        cookie = 'xq_a_token=5c915d14d91dc74b5f2e4c3b4753137ae66c1926; '\
-                + 'xq_a_token.sig=CGCHkBovlWaQtWbwukG6L3FRNIA;  '\
-                + 'xq_r_token=e796a61232e2cf0d90d560d30af22b227d8f7eeb; '\
-                + 'xq_r_token.sig=VeCkcFeNm3Vszkg9DbEZW9Pg0pA;'\
+        cookie = 'xq_a_token=19f5e0044f535b6b1446bb8ae1da980a48bbe850; '\
+                + 'xq_a_token.sig=aaTVFAX9sVcWtOiu-5L8dL-p40k;  '\
+                + 'xq_r_token=6d30415b5f855c12fd74c6e2fb7662ea40272056;  '\
+                + 'xq_r_token.sig=rEvIjgpbifr6Q_Cxwx7bjvarJG0; '\
 
         u = string.join(random.sample({'0', '1', '2', '3', '4', '5', \
                                        '6', '7', '8', '9', '0', '1', \

@@ -425,13 +425,12 @@ class Nirvana(object):
             signal, symbol, daily_price = self.__strategy_commit(lhb_pair, date)
             if not signal:
                 if self._lb:
-                    return
+                    return signal, symbol
                 else:
                     return signal, symbol
         if self._lb:
             self.order_open(symbol, daily_price.avg_price(), 1, date)
-        else:
-            return signal, symbol
+        return signal, symbol
 
     def __position_trade(self, date, daily_price, position):
 
